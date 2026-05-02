@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply text-slate-900 bg-slate-50;
+  }
+}
+
+@layer components {
+  .app-surface {
+    background:
+      linear-gradient(135deg, rgba(15, 23, 42, 0.04), transparent 32%),
+      linear-gradient(315deg, rgba(20, 184, 166, 0.08), transparent 28%),
+      radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.08), transparent 28%),
+      #f8fafc;
+  }
+
+  .mesh-panel {
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78)),
+      repeating-linear-gradient(135deg, rgba(15, 23, 42, 0.06) 0 1px, transparent 1px 14px);
+  }
+
+  .dark-grid {
+    background:
+      linear-gradient(135deg, rgba(20, 184, 166, 0.24), transparent 34%),
+      linear-gradient(315deg, rgba(251, 191, 36, 0.18), transparent 30%),
+      repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 16px),
+      #020617;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -1,0 +1,216 @@
+import React, { useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { CheckCircle2 } from 'lucide-react';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useCreateBooking, useBookingSlots } from '../../hooks/useBookings';
+import { usePublicBusiness } from '../../hooks/useBusiness';
+import { Button, Card, Input, Select, Spinner, Textarea } from '../../components/ui';
+
+const bookingSchema = z.object({
+  customerName: z.string().min(2, 'Name is required'),
+  customerEmail: z.string().email('Enter a valid email'),
+  customerPhone: z.string().optional(),
+  notes: z.string().max(500).optional(),
+});
+
+type BookingFormValues = z.infer<typeof bookingSchema>;
+
+const dateToday = () => new Date().toISOString().slice(0, 10);
+
+const PublicBookingPage: React.FC = () => {
+  const { slug } = useParams();
+  const { data: business, isLoading } = usePublicBusiness(slug);
+  const [serviceId, setServiceId] = useState('');
+  const [date, setDate] = useState(dateToday());
+  const [selectedSlot, setSelectedSlot] = useState('');
+  const [confirmed, setConfirmed] = useState(false);
+  const createBooking = useCreateBooking();
+
+  const selectedServiceId = serviceId || business?.services?.[0]?._id;
+  const { data: slots = [], isFetching: slotsLoading } = useBookingSlots(
+    business?._id,
+    selectedServiceId,
+    date,
+  );
+
+  const serviceOptions = useMemo(
+    () =>
+      (business?.services || []).map((service) => ({
+        value: service._id,
+        label: `${service.name} · ${service.durationMinutes} min · ₹${service.price}`,
+      })),
+    [business],
+  );
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<BookingFormValues>({
+    resolver: zodResolver(bookingSchema),
+    defaultValues: {
+      customerName: '',
+      customerEmail: '',
+      customerPhone: '',
+      notes: '',
+    },
+  });
+
+  const onSubmit = async (values: BookingFormValues) => {
+    if (!business || !selectedServiceId || !selectedSlot) return;
+
+    await createBooking.mutateAsync({
+      businessId: business._id,
+      serviceId: selectedServiceId,
+      date,
+      startTime: selectedSlot,
+      ...values,
+    });
+    setConfirmed(true);
+    reset();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center app-surface">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!business) {
+    return (
+      <div className="flex min-h-screen items-center justify-center app-surface">
+        <Card>Business not found.</Card>
+      </div>
+    );
+  }
+
+  if (confirmed) {
+    return (
+      <div className="flex min-h-screen items-center justify-center app-surface p-4">
+        <Card className="max-w-md text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+            <CheckCircle2 className="h-7 w-7" />
+          </div>
+          <h1 className="mt-5 text-xl font-semibold text-slate-900">Booking requested</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Your appointment request has been sent to {business.name}.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Button onClick={() => setConfirmed(false)}>Book another</Button>
+            <Link to={`/b/${business.slug}`}>
+              <Button variant="secondary">View profile</Button>
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen app-surface">
+      <main className="mx-auto grid max-w-5xl gap-6 px-5 py-8 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <Card className="dark-grid h-fit text-white">
+          <Link to={`/b/${business.slug}`} className="text-sm font-medium text-teal-100/80 hover:text-white">
+            Back to profile
+          </Link>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight text-white">
+            Book {business.name}
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-slate-200">
+            Select a service, date, and available time.
+          </p>
+        </Card>
+
+        <Card className="mesh-panel">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Select
+                label="Service"
+                options={serviceOptions}
+                value={selectedServiceId || ''}
+                onChange={(event) => {
+                  setServiceId(event.target.value);
+                  setSelectedSlot('');
+                }}
+              />
+              <Input
+                label="Date"
+                type="date"
+                min={dateToday()}
+                value={date}
+                onChange={(event) => {
+                  setDate(event.target.value);
+                  setSelectedSlot('');
+                }}
+              />
+            </div>
+
+            <div>
+              <p className="mb-2 text-sm font-medium text-slate-700">Available times</p>
+              {slotsLoading ? (
+                <Spinner />
+              ) : slots.length === 0 ? (
+                <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
+                  No slots available for this date.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {slots.map((slot) => (
+                    <button
+                      key={slot.startTime}
+                      type="button"
+                      disabled={!slot.available}
+                      onClick={() => setSelectedSlot(slot.startTime)}
+                      className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                        selectedSlot === slot.startTime
+                          ? 'border-slate-900 bg-slate-900 text-white'
+                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                      } disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}
+                    >
+                      {slot.startTime}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input
+                label="Name"
+                required
+                error={errors.customerName?.message}
+                {...register('customerName')}
+              />
+              <Input
+                label="Email"
+                type="email"
+                required
+                error={errors.customerEmail?.message}
+                {...register('customerEmail')}
+              />
+            </div>
+            <Input label="Phone" type="tel" {...register('customerPhone')} />
+            <Textarea label="Notes" {...register('notes')} />
+
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              disabled={!selectedSlot}
+              isLoading={createBooking.isPending}
+            >
+              Request booking
+            </Button>
+          </form>
+        </Card>
+      </main>
+    </div>
+  );
+};
+
+export default PublicBookingPage;
