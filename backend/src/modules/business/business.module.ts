@@ -4,6 +4,7 @@ import { Business, BusinessSchema } from './business.schema';
 import { BusinessDao } from './dao/business.dao';
 import { BusinessService } from './business.service';
 import { BusinessController } from './business.controller';
+import { PublicBusinessController } from './public-business.controller';
 
 @Module({
   imports: [
@@ -11,7 +12,7 @@ import { BusinessController } from './business.controller';
       { name: Business.name, schema: BusinessSchema },
     ]),
   ],
-  controllers: [BusinessController],
+  controllers: [BusinessController, PublicBusinessController],
   providers: [
     BusinessDao,      // DAO — pure DB access
     BusinessService,  // Service — business logic

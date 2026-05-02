@@ -75,6 +75,18 @@ const businessApi = {
     return data.data;
   },
 
+  listPublicProfiles: async (params?: {
+    search?: string;
+    category?: string;
+    city?: string;
+  }): Promise<Business[]> => {
+    const { data } = await axiosInstance.get<ApiResponse<Business[]>>(
+      '/business/public',
+      { params },
+    );
+    return data.data;
+  },
+
   // ─── Services ──────────────────────────────────────────────────────────────
 
   addService: async (payload: CreateServicePayload): Promise<Business> => {

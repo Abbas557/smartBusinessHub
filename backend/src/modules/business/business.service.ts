@@ -79,6 +79,34 @@ export class BusinessService {
     return business;
   }
 
+  async listPublicProfiles(query: {
+    search?: string;
+    category?: string;
+    city?: string;
+  }): Promise<BusinessDocument[]> {
+    const filter: Record<string, any> = {};
+
+    if (query.category && query.category !== 'all') {
+      filter.category = query.category;
+    }
+
+    if (query.city) {
+      filter.city = { $regex: query.city, $options: 'i' };
+    }
+
+    if (query.search) {
+      const search = { $regex: query.search, $options: 'i' };
+      filter.$or = [
+        { name: search },
+        { description: search },
+        { city: search },
+        { 'services.name': search },
+      ];
+    }
+
+    return this.businessDao.findPublished(filter);
+  }
+
   async getPublicProfileById(id: string): Promise<BusinessDocument> {
     const business = await this.businessDao.findById(id);
     if (!business || !business.isPublished) {

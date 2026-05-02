@@ -1,5 +1,11 @@
 import axiosInstance from './axios';
-import { ApiResponse, Booking, BookingSlot, BookingStatus } from '../types';
+import {
+  ApiResponse,
+  Booking,
+  BookingSlot,
+  BookingStatus,
+  PaymentMethod,
+} from '../types';
 
 export interface CreateBookingPayload {
   businessId: string;
@@ -10,6 +16,7 @@ export interface CreateBookingPayload {
   date: string;
   startTime: string;
   notes?: string;
+  paymentMethod?: PaymentMethod;
 }
 
 const bookingApi = {

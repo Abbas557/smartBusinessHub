@@ -26,6 +26,8 @@ export const QUERY_KEYS = {
     all: () => ['business'] as const,
     me: () => ['business', 'me'] as const,
     public: (slug: string) => ['business', 'public', slug] as const,
+    marketplace: (params: Record<string, string | undefined>) =>
+      ['business', 'marketplace', params] as const,
   },
   bookings: {
     all: () => ['bookings'] as const,

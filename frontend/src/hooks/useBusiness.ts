@@ -31,6 +31,17 @@ export const usePublicBusiness = (slug: string | undefined) => {
   });
 };
 
+export const usePublicBusinesses = (params: {
+  search?: string;
+  category?: string;
+  city?: string;
+}) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.business.marketplace(params),
+    queryFn: () => businessApi.listPublicProfiles(params),
+  });
+};
+
 // ─── Create business ──────────────────────────────────────────────────────────
 
 export const useCreateBusiness = () => {

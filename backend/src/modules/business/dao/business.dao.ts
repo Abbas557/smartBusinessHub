@@ -50,6 +50,7 @@ export class BusinessDao {
     return this.businessModel
       .find({ ...filter, isPublished: true })
       .select('-ownerId') // Don't expose owner in public queries
+      .sort({ totalBookings: -1, updatedAt: -1 })
       .exec();
   }
 

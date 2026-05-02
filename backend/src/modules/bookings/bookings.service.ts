@@ -8,7 +8,12 @@ import { Types } from 'mongoose';
 import { BusinessService } from '../business/business.service';
 import { CustomersService } from '../customers/customers.service';
 import { MailService } from '../mail/mail.service';
-import { BookingDocument, BookingStatus } from './booking.schema';
+import {
+  BookingDocument,
+  BookingStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from './booking.schema';
 import { BookingDao } from './dao/booking.dao';
 import { CreateBookingDto, SlotQueryDto } from './dto/booking.dto';
 
@@ -76,11 +81,14 @@ export class BookingsService {
       customerPhone: dto.customerPhone,
       serviceId: dto.serviceId,
       serviceName: service.name,
+      servicePrice: service.price,
       date: bookingDate,
       startTime: slot.startTime,
       endTime: slot.endTime,
       notes: dto.notes,
       status: BookingStatus.PENDING,
+      paymentStatus: PaymentStatus.UNPAID,
+      paymentMethod: dto.paymentMethod || PaymentMethod.PAY_LATER,
     });
 
     await this.businessService.incrementBookingCount(business.id);
@@ -91,6 +99,10 @@ export class BookingsService {
   async findForOwner(ownerId: string): Promise<BookingDocument[]> {
     const business = await this.businessService.getMyBusiness(ownerId);
     return this.bookingDao.findByBusiness(business.id);
+  }
+
+  async findPublicById(bookingId: string): Promise<BookingDocument | null> {
+    return this.bookingDao.findById(bookingId);
   }
 
   async findOneForOwner(
@@ -112,6 +124,20 @@ export class BookingsService {
   ): Promise<BookingDocument> {
     await this.findOneForOwner(ownerId, bookingId);
     const updated = await this.bookingDao.updateById(bookingId, { status });
+    if (!updated) throw new NotFoundException('Booking not found');
+    return updated;
+  }
+
+  async markPaid(params: {
+    bookingId: string;
+    paymentId: string;
+    paymentMethod: PaymentMethod;
+  }): Promise<BookingDocument> {
+    const updated = await this.bookingDao.updateById(params.bookingId, {
+      paymentId: params.paymentId,
+      paymentMethod: params.paymentMethod,
+      paymentStatus: PaymentStatus.PAID,
+    });
     if (!updated) throw new NotFoundException('Booking not found');
     return updated;
   }

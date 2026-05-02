@@ -16,7 +16,9 @@ The project contains a React + Vite frontend and a NestJS + MongoDB backend.
 - Public booking flow with available slot generation
 - Booking dashboard with status updates
 - Customer list generated from bookings
-- Analytics dashboard with booking, customer, and status metrics
+- Analytics dashboard with revenue, payment, customer, booking, and service-performance metrics
+- Customer marketplace for discovering and comparing published vendors
+- Demo payment checkout flow for booking payments
 - Embeddable booking widget script for external websites
 - AWS SES booking confirmation email hook
 - Demo seed script for local testing
@@ -61,6 +63,7 @@ smart-business-hub-phase1/
 |   |   |   |-- business/
 |   |   |   |-- customers/
 |   |   |   |-- mail/
+|   |   |   |-- payments/
 |   |   |   |-- upload/
 |   |   |   `-- users/
 |   |   |-- app.module.ts
@@ -225,6 +228,7 @@ Frontend routes:
 /dashboard/bookings
 /dashboard/customers
 /dashboard/settings
+/marketplace
 /b/:slug
 /b/:slug/book
 /embed/:slug
@@ -243,8 +247,55 @@ Important route groups:
 /api/business
 /api/bookings
 /api/customers
+/api/payments
 /api/upload
 ```
+
+## Customer Marketplace
+
+The customer-facing marketplace is available at:
+
+```text
+http://localhost:3000/marketplace
+```
+
+Customers can browse published vendors, search by service or city, filter by category, open a public vendor profile, and start a booking directly from a marketplace card.
+
+Each published business profile remains available at:
+
+```text
+http://localhost:3000/b/:slug
+```
+
+## Analytics And Earnings
+
+The owner dashboard includes earning-focused analytics:
+
+- Projected revenue from non-cancelled bookings
+- Paid revenue from completed demo payments
+- Average order value
+- Payment conversion percentage
+- Paid versus unpaid revenue mix
+- Six-month revenue trend chart
+- Service-level revenue ranking
+- Booking status funnel
+- Upcoming appointment list with payment state
+
+Revenue is calculated from the service price saved on each booking. Older bookings without `servicePrice` count as `0` until recreated or migrated.
+
+## Payment Flow
+
+The current payment module uses a demo checkout provider so the product flow can be tested without live payment credentials.
+
+Public booking flow:
+
+1. Customer chooses a service, date, and slot.
+2. Customer selects either `Pay at venue` or `Demo online payment`.
+3. The booking is created with the service price.
+4. If demo payment is selected, the frontend calls `POST /api/payments/demo-checkout`.
+5. The backend creates a payment record and marks the booking as paid.
+
+This is designed so a real provider can be added later. Good production options are Stripe, Razorpay, or PayPal depending on target markets.
 
 ## Google OAuth Setup
 

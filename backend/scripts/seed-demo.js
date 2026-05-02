@@ -105,11 +105,15 @@ const bookingSchema = new mongoose.Schema(
     customerPhone: String,
     serviceId: String,
     serviceName: String,
+    servicePrice: { type: Number, default: 0 },
     date: Date,
     startTime: String,
     endTime: String,
     status: { type: String, default: 'pending', index: true },
     notes: String,
+    paymentStatus: { type: String, default: 'unpaid', index: true },
+    paymentMethod: { type: String, default: 'pay_later' },
+    paymentId: { type: String, default: null },
   },
   { timestamps: true, collection: 'bookings' },
 );
@@ -142,6 +146,17 @@ async function main() {
     }
     await User.deleteOne({ _id: existingUser._id });
   }
+  await User.deleteMany({ email: /@smartbusinesshub\.local$/ });
+  const existingDemoBusinesses = await Business.find({
+    slug: { $in: ['aster-studio-salon', 'pulsefit-studio', 'citycare-dental-clinic'] },
+  });
+  for (const item of existingDemoBusinesses) {
+    await Booking.deleteMany({ businessId: item._id });
+    await Customer.deleteMany({ businessId: item._id });
+  }
+  await Business.deleteMany({
+    slug: { $in: ['aster-studio-salon', 'pulsefit-studio', 'citycare-dental-clinic'] },
+  });
 
   const password = await bcrypt.hash(demoPassword, 12);
   const user = await User.create({
@@ -226,10 +241,14 @@ async function main() {
       customerPhone: customers[0].phone,
       serviceId: haircut._id.toString(),
       serviceName: haircut.name,
+      servicePrice: haircut.price,
       date: nextWeekday(2),
       startTime: '10:00',
       endTime: '10:45',
       status: 'confirmed',
+      paymentStatus: 'paid',
+      paymentMethod: 'demo_card',
+      paymentId: 'seed-payment-001',
       notes: 'Prefers short layers.',
     },
     {
@@ -240,10 +259,13 @@ async function main() {
       customerPhone: customers[1].phone,
       serviceId: facial._id.toString(),
       serviceName: facial.name,
+      servicePrice: facial.price,
       date: nextWeekday(3),
       startTime: '14:00',
       endTime: '15:00',
       status: 'pending',
+      paymentStatus: 'unpaid',
+      paymentMethod: 'pay_later',
       notes: 'Sensitive skin.',
     },
     {
@@ -254,15 +276,93 @@ async function main() {
       customerPhone: customers[2].phone,
       serviceId: bridal._id.toString(),
       serviceName: bridal.name,
+      servicePrice: bridal.price,
       date: nextWeekday(5),
       startTime: '11:00',
       endTime: '12:30',
       status: 'confirmed',
+      paymentStatus: 'paid',
+      paymentMethod: 'demo_card',
+      paymentId: 'seed-payment-002',
       notes: 'Wedding in June.',
     },
   ]);
 
   await Business.findByIdAndUpdate(business._id, { totalBookings: 3 });
+
+  const marketplaceOwners = await User.insertMany([
+    {
+      name: 'PulseFit Owner',
+      email: 'pulsefit@smartbusinesshub.local',
+      password,
+      role: 'BUSINESS_OWNER',
+      isActive: true,
+    },
+    {
+      name: 'CityCare Owner',
+      email: 'citycare@smartbusinesshub.local',
+      password,
+      role: 'BUSINESS_OWNER',
+      isActive: true,
+    },
+  ]);
+
+  await Business.insertMany([
+    {
+      ownerId: marketplaceOwners[0]._id,
+      name: 'PulseFit Studio',
+      slug: 'pulsefit-studio',
+      description:
+        'Small-group strength training, mobility coaching, and personal fitness sessions.',
+      category: 'gym',
+      phone: '+91 98765 43211',
+      address: 'Hazratganj',
+      city: 'Lucknow',
+      isPublished: true,
+      totalBookings: 18,
+      services: [
+        {
+          name: 'Personal Training',
+          durationMinutes: 60,
+          price: 1200,
+          description: 'One-on-one strength and mobility session.',
+        },
+        {
+          name: 'Group HIIT Class',
+          durationMinutes: 45,
+          price: 450,
+          description: 'High-energy class with coach guidance.',
+        },
+      ],
+    },
+    {
+      ownerId: marketplaceOwners[1]._id,
+      name: 'CityCare Dental Clinic',
+      slug: 'citycare-dental-clinic',
+      description:
+        'Modern dental consultations, cleaning, whitening, and preventive care appointments.',
+      category: 'clinic',
+      phone: '+91 98765 43212',
+      address: 'Gomti Nagar',
+      city: 'Lucknow',
+      isPublished: true,
+      totalBookings: 26,
+      services: [
+        {
+          name: 'Dental Consultation',
+          durationMinutes: 30,
+          price: 700,
+          description: 'Doctor consultation and treatment plan.',
+        },
+        {
+          name: 'Cleaning and Polishing',
+          durationMinutes: 50,
+          price: 1800,
+          description: 'Professional oral hygiene appointment.',
+        },
+      ],
+    },
+  ]);
 
   console.log('Demo data seeded.');
   console.log(`Email: ${demoEmail}`);

@@ -9,7 +9,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { BookingStatus } from '../booking.schema';
+import { BookingStatus, PaymentMethod } from '../booking.schema';
 
 export class CreateBookingDto {
   @IsMongoId()
@@ -40,6 +40,10 @@ export class CreateBookingDto {
   @IsString()
   @MaxLength(500)
   notes?: string;
+
+  @IsOptional()
+  @IsEnum(PaymentMethod)
+  paymentMethod?: PaymentMethod;
 }
 
 export class SlotQueryDto {

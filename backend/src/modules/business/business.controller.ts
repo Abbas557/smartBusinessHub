@@ -20,7 +20,7 @@ import {
 } from './dto/business.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { CurrentUser, Roles, Public } from '../../common/decorators';
+import { CurrentUser, Roles } from '../../common/decorators';
 import { JwtPayload } from '../auth/auth.service';
 import { Role } from '../users/user.schema';
 
@@ -67,13 +67,6 @@ export class BusinessController {
   @HttpCode(HttpStatus.OK)
   unpublish(@CurrentUser() user: JwtPayload) {
     return this.businessService.togglePublish(user.sub, false);
-  }
-
-  // ─── GET /api/business/public/:slug (PUBLIC) ─────────────────────────────
-  @Public()
-  @Get('public/:slug')
-  getPublicProfile(@Param('slug') slug: string) {
-    return this.businessService.getPublicProfile(slug);
   }
 
   // ─── SERVICES ─────────────────────────────────────────────────────────────

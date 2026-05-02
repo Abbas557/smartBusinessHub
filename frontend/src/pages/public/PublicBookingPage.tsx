@@ -1,12 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, CreditCard, WalletCards } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateBooking, useBookingSlots } from '../../hooks/useBookings';
 import { usePublicBusiness } from '../../hooks/useBusiness';
+import { useDemoCheckout } from '../../hooks/usePayments';
 import { Button, Card, Input, Select, Spinner, Textarea } from '../../components/ui';
+import { Booking, PaymentMethod } from '../../types';
 
 const bookingSchema = z.object({
   customerName: z.string().min(2, 'Name is required'),
@@ -25,8 +27,11 @@ const PublicBookingPage: React.FC = () => {
   const [serviceId, setServiceId] = useState('');
   const [date, setDate] = useState(dateToday());
   const [selectedSlot, setSelectedSlot] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pay_later');
   const [confirmed, setConfirmed] = useState(false);
+  const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
   const createBooking = useCreateBooking();
+  const demoCheckout = useDemoCheckout();
 
   const selectedServiceId = serviceId || business?.services?.[0]?._id;
   const { data: slots = [], isFetching: slotsLoading } = useBookingSlots(
@@ -43,6 +48,7 @@ const PublicBookingPage: React.FC = () => {
       })),
     [business],
   );
+  const selectedService = business?.services.find((service) => service._id === selectedServiceId);
 
   const {
     register,
@@ -62,13 +68,29 @@ const PublicBookingPage: React.FC = () => {
   const onSubmit = async (values: BookingFormValues) => {
     if (!business || !selectedServiceId || !selectedSlot) return;
 
-    await createBooking.mutateAsync({
+    const booking = await createBooking.mutateAsync({
       businessId: business._id,
       serviceId: selectedServiceId,
       date,
       startTime: selectedSlot,
+      paymentMethod,
       ...values,
     });
+
+    if (paymentMethod === 'demo_card') {
+      await demoCheckout.mutateAsync({
+        bookingId: booking._id,
+        method: 'demo_card',
+      });
+      setConfirmedBooking({
+        ...booking,
+        paymentStatus: 'paid',
+        paymentMethod: 'demo_card',
+      });
+    } else {
+      setConfirmedBooking(booking);
+    }
+
     setConfirmed(true);
     reset();
   };
@@ -100,6 +122,24 @@ const PublicBookingPage: React.FC = () => {
           <p className="mt-2 text-sm text-slate-500">
             Your appointment request has been sent to {business.name}.
           </p>
+          {confirmedBooking && (
+            <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4 text-left text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Service</span>
+                <span className="font-medium text-slate-900">{confirmedBooking.serviceName}</span>
+              </div>
+              <div className="mt-2 flex justify-between">
+                <span className="text-slate-500">Amount</span>
+                <span className="font-medium text-slate-900">₹{confirmedBooking.servicePrice}</span>
+              </div>
+              <div className="mt-2 flex justify-between">
+                <span className="text-slate-500">Payment</span>
+                <span className="font-medium capitalize text-slate-900">
+                  {confirmedBooking.paymentStatus === 'paid' ? 'Paid online' : 'Pay at venue'}
+                </span>
+              </div>
+            </div>
+          )}
           <div className="mt-6 flex justify-center gap-3">
             <Button onClick={() => setConfirmed(false)}>Book another</Button>
             <Link to={`/b/${business.slug}`}>
@@ -149,6 +189,41 @@ const PublicBookingPage: React.FC = () => {
                 }}
               />
             </div>
+
+            {selectedService && (
+              <div className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-[1fr_1fr]">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('pay_later')}
+                  className={`flex items-start gap-3 rounded-lg border p-4 text-left transition-colors ${
+                    paymentMethod === 'pay_later'
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-white'
+                  }`}
+                >
+                  <WalletCards className="mt-0.5 h-5 w-5" />
+                  <span>
+                    <span className="block text-sm font-semibold">Pay at venue</span>
+                    <span className="mt-1 block text-xs opacity-80">Reserve now, settle after service.</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('demo_card')}
+                  className={`flex items-start gap-3 rounded-lg border p-4 text-left transition-colors ${
+                    paymentMethod === 'demo_card'
+                      ? 'border-emerald-700 bg-emerald-700 text-white'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-white'
+                  }`}
+                >
+                  <CreditCard className="mt-0.5 h-5 w-5" />
+                  <span>
+                    <span className="block text-sm font-semibold">Demo online payment</span>
+                    <span className="mt-1 block text-xs opacity-80">Mark ₹{selectedService.price} as paid.</span>
+                  </span>
+                </button>
+              </div>
+            )}
 
             <div>
               <p className="mb-2 text-sm font-medium text-slate-700">Available times</p>
@@ -202,9 +277,9 @@ const PublicBookingPage: React.FC = () => {
               size="lg"
               className="w-full"
               disabled={!selectedSlot}
-              isLoading={createBooking.isPending}
+              isLoading={createBooking.isPending || demoCheckout.isPending}
             >
-              Request booking
+              {paymentMethod === 'demo_card' ? 'Book and pay demo' : 'Request booking'}
             </Button>
           </form>
         </Card>

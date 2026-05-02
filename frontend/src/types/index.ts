@@ -74,6 +74,8 @@ export interface Business {
 // ─── Bookings ────────────────────────────────────────────────────────────────
 
 export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+export type PaymentStatus = 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded';
+export type PaymentMethod = 'pay_later' | 'demo_card' | 'upi' | 'card';
 
 export interface Booking {
   _id: string;
@@ -84,11 +86,15 @@ export interface Booking {
   customerPhone?: string;
   serviceId: string;
   serviceName: string;
+  servicePrice: number;
   date: string;
   startTime: string;
   endTime: string;
   status: BookingStatus;
   notes?: string;
+  paymentStatus: PaymentStatus;
+  paymentMethod: PaymentMethod;
+  paymentId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -108,6 +114,20 @@ export interface Customer {
   totalBookings: number;
   lastBookingDate: string | null;
   tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Payment {
+  _id: string;
+  bookingId: string;
+  businessId: string;
+  amount: number;
+  currency: string;
+  provider: 'demo' | 'stripe' | 'razorpay';
+  status: PaymentStatus;
+  method: PaymentMethod;
+  reference: string;
   createdAt: string;
   updatedAt: string;
 }

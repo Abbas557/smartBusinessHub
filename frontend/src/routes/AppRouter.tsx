@@ -14,6 +14,7 @@ const CustomersPage    = lazy(() => import('../pages/customers/CustomersPage'));
 const SettingsPage     = lazy(() => import('../pages/settings/SettingsPage'));
 const PublicBusinessPage = lazy(() => import('../pages/public/PublicBusinessPage'));
 const PublicBookingPage  = lazy(() => import('../pages/public/PublicBookingPage'));
+const MarketplacePage    = lazy(() => import('../pages/public/MarketplacePage'));
 const NotFoundPage     = lazy(() => import('../pages/NotFoundPage'));
 const UnauthorizedPage = lazy(() => import('../pages/UnauthorizedPage'));
 
@@ -28,7 +29,7 @@ const AppRouter: React.FC = () => (
     <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* Root redirect */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/marketplace" replace />} />
 
         {/* Guest-only routes (login, register) */}
         <Route element={<GuestRoute />}>
@@ -37,6 +38,7 @@ const AppRouter: React.FC = () => (
         </Route>
 
         {/* Public customer-facing routes */}
+        <Route path="/marketplace" element={<MarketplacePage />} />
         <Route path="/b/:slug"      element={<PublicBusinessPage />} />
         <Route path="/b/:slug/book" element={<PublicBookingPage />} />
         <Route path="/embed/:slug"  element={<PublicBookingPage />} />

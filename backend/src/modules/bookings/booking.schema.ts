@@ -10,6 +10,21 @@ export enum BookingStatus {
   CANCELLED = 'cancelled',
 }
 
+export enum PaymentStatus {
+  UNPAID = 'unpaid',
+  PENDING = 'pending',
+  PAID = 'paid',
+  FAILED = 'failed',
+  REFUNDED = 'refunded',
+}
+
+export enum PaymentMethod {
+  PAY_LATER = 'pay_later',
+  DEMO_CARD = 'demo_card',
+  UPI = 'upi',
+  CARD = 'card',
+}
+
 @Schema({
   timestamps: true,
   collection: 'bookings',
@@ -43,6 +58,9 @@ export class Booking {
   @Prop({ required: true, trim: true })
   serviceName: string;
 
+  @Prop({ required: true, min: 0, default: 0 })
+  servicePrice: number;
+
   @Prop({ required: true })
   date: Date;
 
@@ -62,6 +80,24 @@ export class Booking {
 
   @Prop({ trim: true, maxlength: 500 })
   notes: string;
+
+  @Prop({
+    type: String,
+    enum: PaymentStatus,
+    default: PaymentStatus.UNPAID,
+    index: true,
+  })
+  paymentStatus: PaymentStatus;
+
+  @Prop({
+    type: String,
+    enum: PaymentMethod,
+    default: PaymentMethod.PAY_LATER,
+  })
+  paymentMethod: PaymentMethod;
+
+  @Prop({ default: null, trim: true })
+  paymentId: string;
 
   id: string;
 }
