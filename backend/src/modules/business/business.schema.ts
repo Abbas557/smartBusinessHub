@@ -138,6 +138,9 @@ export class Business {
   @Prop({ default: null })
   bannerUrl: string; // AWS S3 / CloudFront URL
 
+  @Prop({ type: [String], default: [] })
+  galleryUrls: string[];
+
   @Prop({ type: [ServiceSchema], default: [] })
   services: Service[];
 
@@ -147,8 +150,17 @@ export class Business {
   @Prop({ default: false })
   isPublished: boolean; // false = draft, true = public profile live
 
+  @Prop({ default: false, index: true })
+  isVerified: boolean;
+
   @Prop({ default: 0 })
   totalBookings: number;
+
+  @Prop({ default: 0, min: 0, max: 5 })
+  averageRating: number;
+
+  @Prop({ default: 0, min: 0 })
+  reviewCount: number;
 
   id: string;
 }

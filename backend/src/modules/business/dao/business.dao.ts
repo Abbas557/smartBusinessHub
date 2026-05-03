@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, FilterQuery, UpdateQuery, Types } from 'mongoose';
+import { Model, FilterQuery, UpdateQuery, Types, SortOrder } from 'mongoose';
 import { Business, BusinessDocument } from '../business.schema';
 
 /**
@@ -46,11 +46,17 @@ export class BusinessDao {
   // Public published businesses (for search / public pages)
   async findPublished(
     filter: FilterQuery<BusinessDocument> = {},
+    sort: 'top-rated' | 'most-booked' = 'most-booked',
   ): Promise<BusinessDocument[]> {
+    const sortBy: Record<string, SortOrder> =
+      sort === 'top-rated'
+        ? { averageRating: -1, reviewCount: -1, totalBookings: -1, updatedAt: -1 }
+        : { totalBookings: -1, averageRating: -1, updatedAt: -1 };
+
     return this.businessModel
       .find({ ...filter, isPublished: true })
       .select('-ownerId') // Don't expose owner in public queries
-      .sort({ totalBookings: -1, updatedAt: -1 })
+      .sort(sortBy)
       .exec();
   }
 
@@ -59,8 +65,15 @@ export class BusinessDao {
     lat: number;
     lng: number;
     radiusKm: number;
+    sort?: 'nearest' | 'top-rated' | 'most-booked';
   }): Promise<Array<BusinessDocument & { distanceMeters?: number; distanceKm?: number }>> {
     const maxDistanceMeters = params.radiusKm * 1000;
+    const sortBy: Record<string, 1 | -1> =
+      params.sort === 'top-rated'
+        ? { averageRating: -1, reviewCount: -1, distanceMeters: 1 }
+        : params.sort === 'most-booked'
+          ? { totalBookings: -1, averageRating: -1, distanceMeters: 1 }
+          : { distanceMeters: 1, totalBookings: -1, updatedAt: -1 };
 
     return this.businessModel
       .aggregate([
@@ -102,11 +115,7 @@ export class BusinessDao {
           },
         },
         {
-          $sort: {
-            distanceMeters: 1,
-            totalBookings: -1,
-            updatedAt: -1,
-          },
+          $sort: sortBy,
         },
       ])
       .exec();
@@ -207,6 +216,24 @@ export class BusinessDao {
     await this.businessModel.findByIdAndUpdate(businessId, {
       $inc: { totalBookings: 1 },
     });
+  }
+
+  async updateRatingSummary(
+    businessId: string,
+    summary: { averageRating: number; reviewCount: number },
+  ): Promise<void> {
+    await this.businessModel.findByIdAndUpdate(businessId, {
+      $set: summary,
+    });
+  }
+
+  async setVerification(
+    businessId: string,
+    isVerified: boolean,
+  ): Promise<BusinessDocument | null> {
+    return this.businessModel
+      .findByIdAndUpdate(businessId, { isVerified }, { new: true })
+      .exec();
   }
 
   async deleteByOwnerId(ownerId: string): Promise<void> {

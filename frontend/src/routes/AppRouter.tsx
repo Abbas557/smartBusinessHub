@@ -20,6 +20,7 @@ const PublicBookingPage  = lazy(() => import('../pages/public/PublicBookingPage'
 const MarketplacePage    = lazy(() => import('../pages/public/MarketplacePage'));
 const CustomerBookingsPage = lazy(() => import('../pages/customer/CustomerBookingsPage'));
 const CustomerProfilePage = lazy(() => import('../pages/customer/CustomerProfilePage'));
+const AdminDashboardPage = lazy(() => import('../pages/admin/AdminDashboardPage'));
 const NotFoundPage     = lazy(() => import('../pages/NotFoundPage'));
 const UnauthorizedPage = lazy(() => import('../pages/UnauthorizedPage'));
 
@@ -70,6 +71,11 @@ const AppRouter: React.FC = () => (
               <Route path="/dashboard/bookings"  element={<BookingsPage />} />
               <Route path="/dashboard/customers" element={<CustomersPage />} />
             </Route>
+          </Route>
+
+          {/* Admin area */}
+          <Route element={<RoleGuard allowedRoles={['SUPER_ADMIN']} />}>
+            <Route path="/admin" element={<AdminDashboardPage />} />
           </Route>
         </Route>
 

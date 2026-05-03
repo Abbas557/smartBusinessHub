@@ -4,8 +4,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff } from 'lucide-react';
+import { BriefcaseBusiness, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import AuthLayout from '../../components/layout/AuthLayout';
 import { Button, Card, Input, Select, Textarea } from '../../components/ui';
 import { BusinessCategory } from '../../types';
 
@@ -96,22 +97,29 @@ const OwnerRegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen app-surface px-4 py-8">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-6">
-          <Link to="/register" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+    <AuthLayout
+      headline="Launch your local business profile with polish."
+      copy="Set up your vendor account, first service, and business details in one clean flow."
+    >
+      <Card className="bg-white/80">
+        <div className="mb-7 text-center">
+          <Link to="/register" className="text-sm font-semibold text-gold-700 hover:underline">
             Back to account type
           </Link>
-          <h1 className="mt-3 text-3xl font-bold text-slate-900">Create owner account</h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <div className="mx-auto mt-5 flex h-11 w-11 items-center justify-center rounded-lg bg-blush-200 text-brand-700">
+            <BriefcaseBusiness className="h-5 w-5" />
+          </div>
+          <h1 className="mt-4 font-display text-4xl font-semibold text-brand-900">
+            Create owner account
+          </h1>
+          <p className="mt-2 text-sm text-brand-800/70">
             Add the essentials now so your vendor profile starts cleanly.
           </p>
         </div>
 
-        <Card className="mesh-panel">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             <section>
-              <h2 className="text-lg font-semibold text-slate-900">Owner details</h2>
+              <h2 className="font-display text-2xl font-semibold text-brand-900">Owner details</h2>
               <div className="mt-4 grid gap-4 md:grid-cols-3">
                 <Input label="Full name" required error={errors.name?.message} {...register('name')} />
                 <Input label="Email" type="email" required error={errors.email?.message} {...register('email')} />
@@ -129,7 +137,7 @@ const OwnerRegisterPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
-                    className="absolute right-3 top-8 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-8 text-brand-800/40 hover:text-brand-700"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -145,7 +153,7 @@ const OwnerRegisterPage: React.FC = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-slate-900">Business profile</h2>
+              <h2 className="font-display text-2xl font-semibold text-brand-900">Business profile</h2>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <Input label="Business name" required error={errors.businessName?.message} {...register('businessName')} />
                 <Select label="Category" options={categories} error={errors.category?.message} {...register('category')} />
@@ -161,7 +169,7 @@ const OwnerRegisterPage: React.FC = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-slate-900">First service</h2>
+              <h2 className="font-display text-2xl font-semibold text-brand-900">First service</h2>
               <div className="mt-4 grid gap-4 md:grid-cols-3">
                 <Input label="Service name" required error={errors.serviceName?.message} {...register('serviceName')} />
                 <Input label="Duration minutes" type="number" required error={errors.serviceDuration?.message} {...register('serviceDuration')} />
@@ -176,9 +184,8 @@ const OwnerRegisterPage: React.FC = () => {
               Create owner account
             </Button>
           </form>
-        </Card>
-      </div>
-    </div>
+      </Card>
+    </AuthLayout>
   );
 };
 

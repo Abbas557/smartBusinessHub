@@ -11,6 +11,7 @@ export interface CreateBusinessPayload {
   area?: string;
   pincode?: string;
   serviceRadiusKm?: number;
+  galleryUrls?: string[];
   location?: {
     lat: number;
     lng: number;
@@ -91,6 +92,7 @@ const businessApi = {
     lat?: number;
     lng?: number;
     radiusKm?: number;
+    sort?: 'nearest' | 'top-rated' | 'most-booked';
   }): Promise<Business[]> => {
     const { data } = await axiosInstance.get<ApiResponse<Business[]>>(
       '/business/public',

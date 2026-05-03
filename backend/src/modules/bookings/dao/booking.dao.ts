@@ -26,6 +26,13 @@ export class BookingDao {
       .exec();
   }
 
+  async findAll(): Promise<BookingDocument[]> {
+    return this.bookingModel
+      .find()
+      .sort({ date: -1, startTime: 1 })
+      .exec();
+  }
+
   async findByCustomerUser(userId: string): Promise<BookingDocument[]> {
     return this.bookingModel
       .find({ customerUserId: new Types.ObjectId(userId) })

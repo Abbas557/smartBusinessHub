@@ -4,8 +4,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, HeartHandshake } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import AuthLayout from '../../components/layout/AuthLayout';
 import { Button, Card, Input } from '../../components/ui';
 
 const schema = z.object({
@@ -58,19 +59,26 @@ const CustomerRegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen app-surface px-4 py-8">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-6">
-          <Link to="/register" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+    <AuthLayout
+      headline="Discover trusted local services, beautifully."
+      copy="Create a customer profile so we can show nearby vendors, appointments, reviews, and saved favorites."
+    >
+      <Card className="bg-white/80">
+        <div className="mb-7 text-center">
+          <Link to="/register" className="text-sm font-semibold text-gold-700 hover:underline">
             Back to account type
           </Link>
-          <h1 className="mt-3 text-3xl font-bold text-slate-900">Create customer account</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Save your area so the marketplace can show more relevant businesses.
+          <div className="mx-auto mt-5 flex h-11 w-11 items-center justify-center rounded-lg bg-blush-200 text-brand-700">
+            <HeartHandshake className="h-5 w-5" />
+          </div>
+          <h1 className="mt-4 font-display text-4xl font-semibold text-brand-900">
+            Create customer account
+          </h1>
+          <p className="mt-2 text-sm text-brand-800/70">
+            Save your area so the marketplace can show relevant businesses around you.
           </p>
         </div>
 
-        <Card className="mesh-panel">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <Input label="Full name" required error={errors.name?.message} {...register('name')} />
@@ -93,7 +101,7 @@ const CustomerRegisterPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword((value) => !value)}
-                  className="absolute right-3 top-8 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-8 text-brand-800/40 hover:text-brand-700"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -111,9 +119,8 @@ const CustomerRegisterPage: React.FC = () => {
               Create customer account
             </Button>
           </form>
-        </Card>
-      </div>
-    </div>
+      </Card>
+    </AuthLayout>
   );
 };
 

@@ -4,7 +4,6 @@ import {
   IsEnum,
   IsBoolean,
   IsNumber,
-  IsUrl,
   MaxLength,
   MinLength,
   Min,
@@ -209,4 +208,9 @@ export class UpdateBusinessDto {
   @IsOptional()
   @IsString()
   bannerUrl?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  galleryUrls?: string[];
 }

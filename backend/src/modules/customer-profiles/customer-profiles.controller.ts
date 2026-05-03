@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { JwtPayload } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -26,5 +26,21 @@ export class CustomerProfilesController {
     @Body() dto: UpdateCustomerProfileDto,
   ) {
     return this.customerProfilesService.updateMyProfile(user.sub, dto);
+  }
+
+  @Post('me/saved-businesses/:businessId')
+  saveBusiness(
+    @CurrentUser() user: JwtPayload,
+    @Param('businessId') businessId: string,
+  ) {
+    return this.customerProfilesService.saveBusiness(user.sub, businessId);
+  }
+
+  @Delete('me/saved-businesses/:businessId')
+  unsaveBusiness(
+    @CurrentUser() user: JwtPayload,
+    @Param('businessId') businessId: string,
+  ) {
+    return this.customerProfilesService.unsaveBusiness(user.sub, businessId);
   }
 }

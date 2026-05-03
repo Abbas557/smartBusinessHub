@@ -36,4 +36,30 @@ export class CustomerProfileDao {
       )
       .exec();
   }
+
+  async addSavedBusiness(
+    userId: string,
+    businessId: string,
+  ): Promise<CustomerProfileDocument | null> {
+    return this.customerProfileModel
+      .findOneAndUpdate(
+        { userId: new Types.ObjectId(userId) },
+        { $addToSet: { savedBusinessIds: new Types.ObjectId(businessId) } },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async removeSavedBusiness(
+    userId: string,
+    businessId: string,
+  ): Promise<CustomerProfileDocument | null> {
+    return this.customerProfileModel
+      .findOneAndUpdate(
+        { userId: new Types.ObjectId(userId) },
+        { $pull: { savedBusinessIds: new Types.ObjectId(businessId) } },
+        { new: true },
+      )
+      .exec();
+  }
 }

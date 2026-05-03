@@ -65,4 +65,8 @@ export class UsersService {
     if (!user) throw new NotFoundException('User not found');
     return { message: 'Account deactivated' };
   }
+
+  async findAllForAdmin(): Promise<UserDocument[]> {
+    return this.userDao.findAll();
+  }
 }

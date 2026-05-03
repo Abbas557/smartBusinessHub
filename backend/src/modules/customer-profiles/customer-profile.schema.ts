@@ -65,6 +65,9 @@ export class CustomerProfile {
     pincode?: string;
   }>;
 
+  @Prop({ type: [Types.ObjectId], ref: 'Business', default: [], index: true })
+  savedBusinessIds: Types.ObjectId[];
+
   id: string;
 }
 

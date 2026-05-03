@@ -125,6 +125,10 @@ export class BookingsService {
     return this.bookingDao.findByCustomerUser(customerUserId);
   }
 
+  async findAllForAdmin(): Promise<BookingDocument[]> {
+    return this.bookingDao.findAll();
+  }
+
   async findPublicById(bookingId: string): Promise<BookingDocument | null> {
     return this.bookingDao.findById(bookingId);
   }

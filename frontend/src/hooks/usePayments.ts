@@ -17,3 +17,27 @@ export const useDemoCheckout = () => {
     },
   });
 };
+
+export const useCreateRazorpayOrder = () => {
+  return useMutation({
+    mutationFn: paymentApi.createRazorpayOrder,
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Unable to start payment');
+    },
+  });
+};
+
+export const useVerifyRazorpayPayment = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: paymentApi.verifyRazorpayPayment,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.bookings.mine() });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.bookings.all() });
+      toast.success('Payment verified');
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Payment verification failed');
+    },
+  });
+};
