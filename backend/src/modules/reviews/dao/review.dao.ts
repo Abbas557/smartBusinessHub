@@ -28,6 +28,38 @@ export class ReviewDao {
       .exec();
   }
 
+  async findAll(): Promise<ReviewDocument[]> {
+    return this.reviewModel.find().sort({ createdAt: -1 }).exec();
+  }
+
+  async updateStatus(
+    reviewId: string,
+    status: ReviewStatus,
+  ): Promise<ReviewDocument | null> {
+    return this.reviewModel
+      .findByIdAndUpdate(reviewId, { status }, { new: true })
+      .exec();
+  }
+
+  async report(
+    reviewId: string,
+    reason?: string,
+  ): Promise<ReviewDocument | null> {
+    return this.reviewModel
+      .findByIdAndUpdate(
+        reviewId,
+        {
+          $inc: { reportCount: 1 },
+          $set: {
+            ...(reason ? { reportReason: reason } : {}),
+            reportedAt: new Date(),
+          },
+        },
+        { new: true },
+      )
+      .exec();
+  }
+
   async findPublishedByBusiness(businessId: string): Promise<ReviewDocument[]> {
     return this.reviewModel
       .find({

@@ -73,12 +73,14 @@ export interface Business {
   serviceRadiusKm?: number;
   logoUrl: string | null;
   bannerUrl: string | null;
+  galleryUrls?: string[];
   services: Service[];
   hours: BusinessHours;
   isPublished: boolean;
   totalBookings: number;
   averageRating?: number;
   reviewCount?: number;
+  isVerified?: boolean;
   distanceKm?: number;
   distanceMeters?: number;
   createdAt: string;
@@ -155,6 +157,7 @@ export interface CustomerProfile {
     area?: string;
     pincode?: string;
   }>;
+  savedBusinessIds?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -182,6 +185,9 @@ export interface Review {
   rating: number;
   comment?: string;
   status: 'published' | 'hidden';
+  reportCount?: number;
+  reportReason?: string;
+  reportedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

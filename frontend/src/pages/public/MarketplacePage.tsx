@@ -5,14 +5,20 @@ import {
   Building2,
   CalendarDays,
   Gem,
+  Heart,
   MapPin,
+  Navigation,
   Search,
   SlidersHorizontal,
   Star,
 } from 'lucide-react';
 import { usePublicBusinesses } from '../../hooks/useBusiness';
 import { useAuth } from '../../context/AuthContext';
-import { useCustomerProfile } from '../../hooks/useCustomerProfile';
+import {
+  useCustomerProfile,
+  useSaveBusiness,
+  useUnsaveBusiness,
+} from '../../hooks/useCustomerProfile';
 import { BusinessCategory } from '../../types';
 import { Badge, Button, Card, Input, Select, Spinner } from '../../components/ui';
 
@@ -36,6 +42,9 @@ const MarketplacePage: React.FC = () => {
   const [city, setCity] = useState('');
   const [area, setArea] = useState('');
   const [radiusKm, setRadiusKm] = useState(25);
+  const [sort, setSort] = useState<'nearest' | 'top-rated' | 'most-booked'>('nearest');
+  const saveBusiness = useSaveBusiness();
+  const unsaveBusiness = useUnsaveBusiness();
 
   useEffect(() => {
     if (!isCustomer || !profile) return;
@@ -52,6 +61,7 @@ const MarketplacePage: React.FC = () => {
       category,
       city: city.trim() || undefined,
       area: area.trim() || undefined,
+      sort,
     };
 
     if (!hasNearbySearch || !nearbyCoordinates) return baseParams;
@@ -62,9 +72,34 @@ const MarketplacePage: React.FC = () => {
       lat: nearbyCoordinates[1],
       radiusKm,
     };
-  }, [area, category, city, hasNearbySearch, nearbyCoordinates, radiusKm, search]);
+  }, [area, category, city, hasNearbySearch, nearbyCoordinates, radiusKm, search, sort]);
 
   const { data: businesses = [], isLoading } = usePublicBusinesses(params);
+  const savedBusinessIds = new Set(profile?.savedBusinessIds || []);
+  const businessesWithCoordinates = businesses.filter(
+    (business) => business.location?.coordinates?.length === 2,
+  );
+  const bounds = useMemo(() => {
+    const coordinates = businessesWithCoordinates.map((business) => business.location!.coordinates);
+    if (nearbyCoordinates?.length === 2) coordinates.push(nearbyCoordinates);
+    const lngs = coordinates.map(([lng]) => lng);
+    const lats = coordinates.map(([, lat]) => lat);
+    return {
+      minLng: Math.min(...lngs),
+      maxLng: Math.max(...lngs),
+      minLat: Math.min(...lats),
+      maxLat: Math.max(...lats),
+    };
+  }, [businessesWithCoordinates, nearbyCoordinates]);
+
+  const getPinStyle = (coordinates: [number, number]) => {
+    const lngRange = Math.max(bounds.maxLng - bounds.minLng, 0.01);
+    const latRange = Math.max(bounds.maxLat - bounds.minLat, 0.01);
+    return {
+      left: `${12 + ((coordinates[0] - bounds.minLng) / lngRange) * 76}%`,
+      top: `${12 + ((bounds.maxLat - coordinates[1]) / latRange) * 76}%`,
+    };
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 lg:px-6">
@@ -116,7 +151,7 @@ const MarketplacePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid gap-3 border-t border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,1fr)_160px_160px_160px_140px]">
+        <div className="grid gap-3 border-t border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,1fr)_160px_160px_160px_140px_170px]">
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -152,6 +187,17 @@ const MarketplacePage: React.FC = () => {
               ]}
               disabled={!hasNearbySearch}
             />
+            <Select
+              value={sort}
+              onChange={(event) =>
+                setSort(event.target.value as 'nearest' | 'top-rated' | 'most-booked')
+              }
+              options={[
+                { value: 'nearest', label: 'Nearest' },
+                { value: 'top-rated', label: 'Top rated' },
+                { value: 'most-booked', label: 'Most booked' },
+              ]}
+            />
         </div>
       </section>
 
@@ -165,9 +211,63 @@ const MarketplacePage: React.FC = () => {
           </div>
           <div className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 sm:flex">
             <SlidersHorizontal className="h-4 w-4" />
-            {hasNearbySearch ? 'Sorted by distance' : 'Sorted by activity'}
+            Sorted by {sort.replace('-', ' ')}
           </div>
       </div>
+
+      {businessesWithCoordinates.length > 0 && (
+        <Card className="overflow-hidden p-0">
+          <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="relative min-h-[280px] overflow-hidden bg-emerald-50">
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(15,118,110,0.08)_1px,transparent_1px),linear-gradient(0deg,rgba(15,118,110,0.08)_1px,transparent_1px)] bg-[size:42px_42px]" />
+              {nearbyCoordinates?.length === 2 && (
+                <div
+                  className="absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-slate-950 px-3 py-1.5 text-xs font-semibold text-white shadow-lg"
+                  style={getPinStyle(nearbyCoordinates)}
+                >
+                  <Navigation className="h-3.5 w-3.5" />
+                  You
+                </div>
+              )}
+              {businessesWithCoordinates.slice(0, 16).map((business) => (
+                <Link
+                  key={business._id}
+                  to={`/b/${business.slug}`}
+                  className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-lg ring-1 ring-emerald-200 hover:bg-emerald-700 hover:text-white"
+                  style={getPinStyle(business.location!.coordinates)}
+                >
+                  <MapPin className="h-3.5 w-3.5" />
+                  {business.name}
+                </Link>
+              ))}
+            </div>
+            <div className="bg-slate-950 p-5 text-white">
+              <h2 className="text-lg font-semibold">Vendor map</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-300">
+                Pins use saved business coordinates. Distance labels use the marketplace location filter.
+              </p>
+              <div className="mt-4 space-y-2">
+                {businessesWithCoordinates.slice(0, 5).map((business) => (
+                  <a
+                    key={business._id}
+                    href={`https://www.openstreetmap.org/directions?to=${business.location!.coordinates[1]}%2C${business.location!.coordinates[0]}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between rounded-lg bg-white/10 px-3 py-2 text-sm hover:bg-white/15"
+                  >
+                    <span>{business.name}</span>
+                    <span className="text-slate-300">
+                      {typeof business.distanceKm === 'number'
+                        ? `${Math.round(business.distanceKm * 1.25)} km drive est.`
+                        : 'Open route'}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {isLoading ? (
           <div className="flex h-48 items-center justify-center">
@@ -261,7 +361,23 @@ const MarketplacePage: React.FC = () => {
                       <Link to={`/b/${business.slug}`}>
                         <Button variant="secondary" className="w-full">View</Button>
                       </Link>
-                      <Link to={`/b/${business.slug}/book`}>
+                      <Button
+                        variant="secondary"
+                        className="w-full"
+                        leftIcon={<Heart className={`h-4 w-4 ${savedBusinessIds.has(business._id) ? 'fill-current text-rose-500' : ''}`} />}
+                        onClick={() => {
+                          if (!isCustomer) return;
+                          if (savedBusinessIds.has(business._id)) {
+                            unsaveBusiness.mutate(business._id);
+                          } else {
+                            saveBusiness.mutate(business._id);
+                          }
+                        }}
+                        disabled={!isCustomer}
+                      >
+                        {savedBusinessIds.has(business._id) ? 'Saved' : 'Save'}
+                      </Button>
+                      <Link to={`/b/${business.slug}/book`} className="col-span-2">
                         <Button className="w-full" leftIcon={<CalendarDays className="h-4 w-4" />}>
                           Book
                         </Button>

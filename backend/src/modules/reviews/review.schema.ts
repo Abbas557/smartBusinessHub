@@ -46,6 +46,15 @@ export class Review {
   })
   status: ReviewStatus;
 
+  @Prop({ default: 0, min: 0 })
+  reportCount: number;
+
+  @Prop({ trim: true, maxlength: 300 })
+  reportReason: string;
+
+  @Prop({ default: null })
+  reportedAt: Date;
+
   id: string;
 }
 

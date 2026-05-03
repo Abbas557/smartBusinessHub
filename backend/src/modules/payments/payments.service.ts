@@ -56,6 +56,10 @@ export class PaymentsService {
     return { payment, checkoutMode: 'demo' };
   }
 
+  async findAllForAdmin(): Promise<PaymentDocument[]> {
+    return this.paymentModel.find().sort({ createdAt: -1 }).exec();
+  }
+
   async createRazorpayOrder(params: {
     bookingId: string;
   }): Promise<{

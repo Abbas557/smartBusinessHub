@@ -25,3 +25,31 @@ export const useUpdateCustomerProfile = () => {
     },
   });
 };
+
+export const useSaveBusiness = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: customerProfileApi.saveBusiness,
+    onSuccess: (data) => {
+      qc.setQueryData(customerProfileKey, data);
+      toast.success('Vendor saved');
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Could not save vendor');
+    },
+  });
+};
+
+export const useUnsaveBusiness = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: customerProfileApi.unsaveBusiness,
+    onSuccess: (data) => {
+      qc.setQueryData(customerProfileKey, data);
+      toast.success('Vendor removed');
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Could not remove vendor');
+    },
+  });
+};

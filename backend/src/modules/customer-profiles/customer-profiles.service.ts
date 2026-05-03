@@ -39,6 +39,30 @@ export class CustomerProfilesService {
     return updated;
   }
 
+  async saveBusiness(
+    userId: string,
+    businessId: string,
+  ): Promise<CustomerProfileDocument> {
+    const updated = await this.customerProfileDao.addSavedBusiness(
+      userId,
+      businessId,
+    );
+    if (!updated) throw new NotFoundException('Customer profile not found');
+    return updated;
+  }
+
+  async unsaveBusiness(
+    userId: string,
+    businessId: string,
+  ): Promise<CustomerProfileDocument> {
+    const updated = await this.customerProfileDao.removeSavedBusiness(
+      userId,
+      businessId,
+    );
+    if (!updated) throw new NotFoundException('Customer profile not found');
+    return updated;
+  }
+
   private prepareProfilePayload<
     T extends CreateCustomerProfileDto | UpdateCustomerProfileDto,
   >(dto: T) {

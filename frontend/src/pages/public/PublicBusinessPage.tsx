@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   ArrowRight,
@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Clock,
   CreditCard,
+  Flag,
   MapPin,
   Phone,
   ShieldCheck,
@@ -13,13 +14,15 @@ import {
   Star,
 } from 'lucide-react';
 import { usePublicBusiness } from '../../hooks/useBusiness';
-import { useBusinessReviews } from '../../hooks/useReviews';
-import { Badge, Button, Card, Spinner } from '../../components/ui';
+import { useBusinessReviews, useReportReview } from '../../hooks/useReviews';
+import { Badge, Button, Card, Select, Spinner } from '../../components/ui';
 
 const PublicBusinessPage: React.FC = () => {
   const { slug } = useParams();
+  const [reviewFilter, setReviewFilter] = useState<'all' | '5' | '4plus' | 'reported'>('all');
   const { data: business, isLoading, isError } = usePublicBusiness(slug);
   const { data: reviews = [] } = useBusinessReviews(business?._id);
+  const reportReview = useReportReview(business?._id);
 
   if (isLoading) {
     return (
@@ -49,6 +52,14 @@ const PublicBusinessPage: React.FC = () => {
   const startingPrice = Math.min(...activeServices.map((service) => service.price));
   const rating = business.averageRating || 0;
   const reviewCount = business.reviewCount || 0;
+  const filteredReviews = useMemo(() => {
+    return reviews.filter((review) => {
+      if (reviewFilter === '5') return review.rating === 5;
+      if (reviewFilter === '4plus') return review.rating >= 4;
+      if (reviewFilter === 'reported') return Boolean(review.reportCount);
+      return true;
+    });
+  }, [reviewFilter, reviews]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -184,6 +195,30 @@ const PublicBusinessPage: React.FC = () => {
           ))}
         </section>
 
+        {Boolean(business.galleryUrls?.length) && (
+          <section>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-950">Gallery</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Recent photos shared by the vendor.
+                </p>
+              </div>
+              <Badge>{business.galleryUrls?.length || 0} photos</Badge>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {business.galleryUrls?.slice(0, 6).map((url) => (
+                <img
+                  key={url}
+                  src={url}
+                  alt={`${business.name} gallery`}
+                  className="h-56 w-full rounded-lg border border-slate-200 object-cover shadow-sm"
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
           <Card className="h-fit bg-slate-950 text-white">
             <Star className="h-6 w-6 fill-current text-amber-400" />
@@ -211,14 +246,28 @@ const PublicBusinessPage: React.FC = () => {
                 {reviewCount} total
               </Badge>
             </div>
+            <div className="mt-4 max-w-xs">
+              <Select
+                value={reviewFilter}
+                onChange={(event) =>
+                  setReviewFilter(event.target.value as 'all' | '5' | '4plus' | 'reported')
+                }
+                options={[
+                  { value: 'all', label: 'All reviews' },
+                  { value: '5', label: '5 star only' },
+                  { value: '4plus', label: '4+ stars' },
+                  { value: 'reported', label: 'Reported' },
+                ]}
+              />
+            </div>
 
-            {reviews.length === 0 ? (
+            {filteredReviews.length === 0 ? (
               <p className="mt-5 rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
                 No published reviews yet.
               </p>
             ) : (
               <div className="mt-5 grid gap-3">
-                {reviews.slice(0, 3).map((review) => (
+                {filteredReviews.slice(0, 6).map((review) => (
                   <div
                     key={review._id}
                     className="rounded-lg border border-slate-200 bg-white p-4"
@@ -245,6 +294,20 @@ const PublicBusinessPage: React.FC = () => {
                         {review.comment}
                       </p>
                     )}
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-xs text-slate-400">
+                        {review.reportCount ? `${review.reportCount} report(s)` : 'Published'}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        leftIcon={<Flag className="h-3.5 w-3.5" />}
+                        isLoading={reportReview.isPending}
+                        onClick={() => reportReview.mutate(review._id)}
+                      >
+                        Report
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

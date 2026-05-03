@@ -4,7 +4,7 @@ import { JwtPayload } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Role } from '../users/user.schema';
-import { CreateReviewDto } from './dto/review.dto';
+import { CreateReviewDto, ReportReviewDto } from './dto/review.dto';
 import { ReviewsService } from './reviews.service';
 
 @Controller('reviews')
@@ -29,5 +29,14 @@ export class ReviewsController {
   @Get('business/:businessId')
   findForBusiness(@Param('businessId') businessId: string) {
     return this.reviewsService.findPublishedByBusiness(businessId);
+  }
+
+  @Public()
+  @Post(':reviewId/report')
+  report(
+    @Param('reviewId') reviewId: string,
+    @Body() dto: ReportReviewDto,
+  ) {
+    return this.reviewsService.reportReview(reviewId, dto.reason);
   }
 }

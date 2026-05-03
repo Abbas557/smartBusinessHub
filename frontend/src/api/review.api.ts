@@ -29,6 +29,17 @@ const reviewApi = {
     );
     return data.data;
   },
+
+  report: async (
+    reviewId: string,
+    reason?: string,
+  ): Promise<Review> => {
+    const { data } = await axiosInstance.post<ApiResponse<Review>>(
+      `/reviews/${reviewId}/report`,
+      { reason },
+    );
+    return data.data;
+  },
 };
 
 export default reviewApi;

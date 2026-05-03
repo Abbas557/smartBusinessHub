@@ -22,3 +22,10 @@ export class CreateReviewDto {
   @MaxLength(700)
   comment?: string;
 }
+
+export class ReportReviewDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  reason?: string;
+}

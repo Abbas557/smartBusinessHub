@@ -6,6 +6,10 @@ export interface UpdateCustomerProfilePayload {
   city?: string;
   area?: string;
   pincode?: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 const customerProfileApi = {
@@ -22,6 +26,20 @@ const customerProfileApi = {
     const { data } = await axiosInstance.patch<ApiResponse<CustomerProfile>>(
       '/customer-profile/me',
       payload,
+    );
+    return data.data;
+  },
+
+  saveBusiness: async (businessId: string): Promise<CustomerProfile> => {
+    const { data } = await axiosInstance.post<ApiResponse<CustomerProfile>>(
+      `/customer-profile/me/saved-businesses/${businessId}`,
+    );
+    return data.data;
+  },
+
+  unsaveBusiness: async (businessId: string): Promise<CustomerProfile> => {
+    const { data } = await axiosInstance.delete<ApiResponse<CustomerProfile>>(
+      `/customer-profile/me/saved-businesses/${businessId}`,
     );
     return data.data;
   },

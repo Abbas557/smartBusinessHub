@@ -65,6 +65,29 @@ export class ReviewsService {
     return this.reviewDao.findPublishedByBusiness(businessId);
   }
 
+  async findAllForAdmin(): Promise<ReviewDocument[]> {
+    return this.reviewDao.findAll();
+  }
+
+  async setStatusForAdmin(
+    reviewId: string,
+    status: ReviewStatus,
+  ): Promise<ReviewDocument> {
+    const updated = await this.reviewDao.updateStatus(reviewId, status);
+    if (!updated) throw new NotFoundException('Review not found');
+    await this.refreshBusinessRating(updated.businessId.toString());
+    return updated;
+  }
+
+  async reportReview(
+    reviewId: string,
+    reason?: string,
+  ): Promise<ReviewDocument> {
+    const updated = await this.reviewDao.report(reviewId, reason);
+    if (!updated) throw new NotFoundException('Review not found');
+    return updated;
+  }
+
   private async refreshBusinessRating(businessId: string): Promise<void> {
     const summary = await this.reviewDao.getPublishedSummary(businessId);
     await this.businessService.updateRatingSummary(businessId, summary);

@@ -36,3 +36,22 @@ export const useCreateReview = () => {
     },
   });
 };
+
+export const useReportReview = (businessId: string | undefined) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (reviewId: string) =>
+      reviewApi.report(reviewId, 'Reported from public business profile'),
+    onSuccess: () => {
+      if (businessId) {
+        qc.invalidateQueries({
+          queryKey: QUERY_KEYS.reviews.business(businessId),
+        });
+      }
+      toast.success('Review reported');
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Report failed');
+    },
+  });
+};

@@ -92,6 +92,7 @@ export class BusinessService {
     lat?: string;
     lng?: string;
     radiusKm?: string;
+    sort?: string;
   }): Promise<BusinessDocument[]> {
     const filter: Record<string, any> = {};
 
@@ -124,16 +125,21 @@ export class BusinessService {
 
     const lat = this.parseCoordinate(query.lat);
     const lng = this.parseCoordinate(query.lng);
+    const sort = this.parsePublicSort(query.sort);
     if (lat !== null && lng !== null) {
       return this.businessDao.findPublishedNearby({
         filter,
         lat,
         lng,
         radiusKm: this.parseRadiusKm(query.radiusKm),
+        sort,
       }) as any;
     }
 
-    return this.businessDao.findPublished(filter);
+    return this.businessDao.findPublished(
+      filter,
+      sort === 'nearest' ? 'most-booked' : sort,
+    );
   }
 
   async getPublicProfileById(id: string): Promise<BusinessDocument> {
@@ -213,6 +219,22 @@ export class BusinessService {
     await this.businessDao.updateRatingSummary(businessId, summary);
   }
 
+  async listAllForAdmin(): Promise<BusinessDocument[]> {
+    return this.businessDao.findAll();
+  }
+
+  async setVerificationForAdmin(
+    businessId: string,
+    isVerified: boolean,
+  ): Promise<BusinessDocument> {
+    const updated = await this.businessDao.setVerification(
+      businessId,
+      isVerified,
+    );
+    if (!updated) throw new NotFoundException('Business not found');
+    return updated;
+  }
+
   // ─── HOURS ─────────────────────────────────────────────────────────────────
 
   async updateHours(
@@ -275,5 +297,14 @@ export class BusinessService {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return 25;
     return Math.min(Math.max(parsed, 1), 100);
+  }
+
+  private parsePublicSort(
+    value?: string,
+  ): 'nearest' | 'top-rated' | 'most-booked' {
+    if (value === 'top-rated' || value === 'most-booked' || value === 'nearest') {
+      return value;
+    }
+    return 'nearest';
   }
 }

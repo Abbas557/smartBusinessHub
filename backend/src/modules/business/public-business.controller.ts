@@ -17,6 +17,7 @@ export class PublicBusinessController {
     @Query('lat') lat?: string,
     @Query('lng') lng?: string,
     @Query('radiusKm') radiusKm?: string,
+    @Query('sort') sort?: string,
   ) {
     return this.businessService.listPublicProfiles({
       search,
@@ -27,6 +28,7 @@ export class PublicBusinessController {
       lat,
       lng,
       radiusKm,
+      sort,
     });
   }
 
