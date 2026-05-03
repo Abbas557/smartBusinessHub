@@ -102,6 +102,26 @@ export class Booking {
   @Prop({ default: null, trim: true })
   paymentId: string;
 
+  @Prop({ default: null })
+  cancelledAt: Date;
+
+  @Prop({ trim: true, maxlength: 300 })
+  cancellationReason: string;
+
+  @Prop({
+    type: {
+      date: Date,
+      startTime: String,
+      endTime: String,
+    },
+    default: null,
+  })
+  rescheduledFrom: {
+    date: Date;
+    startTime: string;
+    endTime: string;
+  };
+
   id: string;
 }
 

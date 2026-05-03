@@ -35,6 +35,7 @@ const MarketplacePage: React.FC = () => {
   const [category, setCategory] = useState<BusinessCategory | 'all'>('all');
   const [city, setCity] = useState('');
   const [area, setArea] = useState('');
+  const [radiusKm, setRadiusKm] = useState(25);
 
   useEffect(() => {
     if (!isCustomer || !profile) return;
@@ -42,15 +43,26 @@ const MarketplacePage: React.FC = () => {
     setArea((value) => value || profile.area || '');
   }, [isCustomer, profile]);
 
-  const params = useMemo(
-    () => ({
+  const nearbyCoordinates = profile?.location?.coordinates;
+  const hasNearbySearch = Boolean(isCustomer && nearbyCoordinates?.length === 2);
+
+  const params = useMemo(() => {
+    const baseParams = {
       search: search.trim() || undefined,
       category,
       city: city.trim() || undefined,
       area: area.trim() || undefined,
-    }),
-    [area, category, city, search],
-  );
+    };
+
+    if (!hasNearbySearch || !nearbyCoordinates) return baseParams;
+
+    return {
+      ...baseParams,
+      lng: nearbyCoordinates[0],
+      lat: nearbyCoordinates[1],
+      radiusKm,
+    };
+  }, [area, category, city, hasNearbySearch, nearbyCoordinates, radiusKm, search]);
 
   const { data: businesses = [], isLoading } = usePublicBusinesses(params);
 
@@ -84,12 +96,14 @@ const MarketplacePage: React.FC = () => {
                 <Gem className="h-5 w-5" />
               </div>
               <h2 className="mt-4 text-lg font-semibold text-slate-950">
-                {isCustomer && profile?.area
-                  ? `Curated around ${profile.area}`
+                {hasNearbySearch && profile?.area
+                  ? `Nearby picks around ${profile.area}`
                   : 'Curated for your area'}
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Set or change your area below to tune the marketplace results.
+                {hasNearbySearch
+                  ? `Showing vendors within ${radiusKm} km that also serve your location.`
+                  : 'Set your customer profile location to unlock nearby vendor ranking.'}
               </p>
             </div>
             {!isCustomer && (
@@ -102,7 +116,7 @@ const MarketplacePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid gap-3 border-t border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,1fr)_170px_170px_170px]">
+        <div className="grid gap-3 border-t border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,1fr)_160px_160px_160px_140px]">
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -126,17 +140,32 @@ const MarketplacePage: React.FC = () => {
               placeholder="Area"
               leftIcon={<MapPin className="h-4 w-4" />}
             />
+            <Select
+              value={String(radiusKm)}
+              onChange={(event) => setRadiusKm(Number(event.target.value))}
+              options={[
+                { value: '5', label: '5 km' },
+                { value: '10', label: '10 km' },
+                { value: '25', label: '25 km' },
+                { value: '50', label: '50 km' },
+                { value: '100', label: '100 km' },
+              ]}
+              disabled={!hasNearbySearch}
+            />
         </div>
       </section>
 
       <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-slate-900">Available vendors</h2>
-            <p className="text-sm text-slate-500">{businesses.length} published profiles found</p>
+            <p className="text-sm text-slate-500">
+              {businesses.length} published profiles found
+              {hasNearbySearch ? ` within ${radiusKm} km` : ''}
+            </p>
           </div>
           <div className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 sm:flex">
             <SlidersHorizontal className="h-4 w-4" />
-            Sorted by activity
+            {hasNearbySearch ? 'Sorted by distance' : 'Sorted by activity'}
           </div>
       </div>
 
@@ -212,6 +241,12 @@ const MarketplacePage: React.FC = () => {
                         <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1">
                           <MapPin className="h-3.5 w-3.5" />
                           {[business.area, business.city].filter(Boolean).join(', ')}
+                        </span>
+                      )}
+                      {typeof business.distanceKm === 'number' && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
+                          <MapPin className="h-3.5 w-3.5" />
+                          {business.distanceKm} km away
                         </span>
                       )}
                       <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1">

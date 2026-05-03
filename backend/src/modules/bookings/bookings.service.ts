@@ -104,8 +104,11 @@ export class BookingsService {
       endTime: slot.endTime,
       notes: dto.notes,
       status: BookingStatus.PENDING,
-      paymentStatus: PaymentStatus.UNPAID,
       paymentMethod: dto.paymentMethod || PaymentMethod.PAY_LATER,
+      paymentStatus:
+        dto.paymentMethod === PaymentMethod.DEMO_CARD
+          ? PaymentStatus.PENDING
+          : PaymentStatus.UNPAID,
     });
 
     await this.businessService.incrementBookingCount(business.id);
@@ -124,6 +127,82 @@ export class BookingsService {
 
   async findPublicById(bookingId: string): Promise<BookingDocument | null> {
     return this.bookingDao.findById(bookingId);
+  }
+
+  async cancelForCustomer(
+    customerUserId: string,
+    bookingId: string,
+    reason?: string,
+  ): Promise<BookingDocument> {
+    const booking = await this.bookingDao.findByIdAndCustomerUser(
+      bookingId,
+      customerUserId,
+    );
+    if (!booking) throw new NotFoundException('Booking not found');
+    if (booking.status === BookingStatus.CANCELLED) return booking;
+    if (booking.status === BookingStatus.COMPLETED) {
+      throw new BadRequestException('Completed bookings cannot be cancelled');
+    }
+
+    const updated = await this.bookingDao.updateById(bookingId, {
+      status: BookingStatus.CANCELLED,
+      cancelledAt: new Date(),
+      cancellationReason: reason,
+    });
+    if (!updated) throw new NotFoundException('Booking not found');
+    return updated;
+  }
+
+  async rescheduleForCustomer(
+    customerUserId: string,
+    bookingId: string,
+    params: { date: string; startTime: string },
+  ): Promise<BookingDocument> {
+    const booking = await this.bookingDao.findByIdAndCustomerUser(
+      bookingId,
+      customerUserId,
+    );
+    if (!booking) throw new NotFoundException('Booking not found');
+    if (booking.status === BookingStatus.CANCELLED) {
+      throw new BadRequestException('Cancelled bookings cannot be rescheduled');
+    }
+    if (booking.status === BookingStatus.COMPLETED) {
+      throw new BadRequestException('Completed bookings cannot be rescheduled');
+    }
+
+    const bookingDate = this.parseDate(params.date);
+    const slots = await this.getSlots({
+      businessId: booking.businessId.toString(),
+      serviceId: booking.serviceId,
+      date: params.date,
+    });
+    const slot = slots.find((item) => item.startTime === params.startTime);
+    if (!slot?.available) {
+      throw new BadRequestException('Selected time slot is unavailable');
+    }
+
+    const conflict = await this.bookingDao.findSlotConflict({
+      businessId: booking.businessId.toString(),
+      date: bookingDate,
+      startTime: params.startTime,
+    });
+    if (conflict && conflict.id !== booking.id) {
+      throw new BadRequestException('Selected time slot is already booked');
+    }
+
+    const updated = await this.bookingDao.updateById(bookingId, {
+      date: bookingDate,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      status: BookingStatus.PENDING,
+      rescheduledFrom: {
+        date: booking.date,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+      },
+    });
+    if (!updated) throw new NotFoundException('Booking not found');
+    return updated;
   }
 
   async findOneForOwner(

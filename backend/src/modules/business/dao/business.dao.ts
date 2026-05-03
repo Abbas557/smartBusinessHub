@@ -54,6 +54,64 @@ export class BusinessDao {
       .exec();
   }
 
+  async findPublishedNearby(params: {
+    filter?: FilterQuery<BusinessDocument>;
+    lat: number;
+    lng: number;
+    radiusKm: number;
+  }): Promise<Array<BusinessDocument & { distanceMeters?: number; distanceKm?: number }>> {
+    const maxDistanceMeters = params.radiusKm * 1000;
+
+    return this.businessModel
+      .aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: 'Point',
+              coordinates: [params.lng, params.lat],
+            },
+            distanceField: 'distanceMeters',
+            spherical: true,
+            maxDistance: maxDistanceMeters,
+            query: {
+              ...params.filter,
+              isPublished: true,
+              'location.coordinates': { $exists: true, $ne: [] },
+            },
+          },
+        },
+        {
+          $match: {
+            $expr: {
+              $lte: [
+                '$distanceMeters',
+                { $multiply: [{ $ifNull: ['$serviceRadiusKm', 10] }, 1000] },
+              ],
+            },
+          },
+        },
+        {
+          $addFields: {
+            distanceKm: { $round: [{ $divide: ['$distanceMeters', 1000] }, 1] },
+          },
+        },
+        {
+          $project: {
+            ownerId: 0,
+            __v: 0,
+          },
+        },
+        {
+          $sort: {
+            distanceMeters: 1,
+            totalBookings: -1,
+            updatedAt: -1,
+          },
+        },
+      ])
+      .exec();
+  }
+
   async findAll(
     filter: FilterQuery<BusinessDocument> = {},
   ): Promise<BusinessDocument[]> {

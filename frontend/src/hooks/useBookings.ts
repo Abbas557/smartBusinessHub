@@ -70,6 +70,43 @@ export const useCreateCustomerBooking = () => {
   });
 };
 
+export const useCancelCustomerBooking = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookingId, reason }: { bookingId: string; reason?: string }) =>
+      bookingApi.cancelMine(bookingId, reason),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.bookings.mine() });
+      toast.success('Booking cancelled');
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Cancellation failed');
+    },
+  });
+};
+
+export const useRescheduleCustomerBooking = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      bookingId,
+      date,
+      startTime,
+    }: {
+      bookingId: string;
+      date: string;
+      startTime: string;
+    }) => bookingApi.rescheduleMine(bookingId, { date, startTime }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.bookings.mine() });
+      toast.success('Booking rescheduled');
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Reschedule failed');
+    },
+  });
+};
+
 export const useUpdateBookingStatus = () => {
   const qc = useQueryClient();
   return useMutation({

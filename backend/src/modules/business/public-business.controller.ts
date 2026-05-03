@@ -14,6 +14,9 @@ export class PublicBusinessController {
     @Query('city') city?: string,
     @Query('area') area?: string,
     @Query('pincode') pincode?: string,
+    @Query('lat') lat?: string,
+    @Query('lng') lng?: string,
+    @Query('radiusKm') radiusKm?: string,
   ) {
     return this.businessService.listPublicProfiles({
       search,
@@ -21,6 +24,9 @@ export class PublicBusinessController {
       city,
       area,
       pincode,
+      lat,
+      lng,
+      radiusKm,
     });
   }
 

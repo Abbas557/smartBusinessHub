@@ -61,3 +61,18 @@ export class UpdateBookingStatusDto {
   @IsEnum(BookingStatus)
   status: BookingStatus;
 }
+
+export class CancelBookingDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  reason?: string;
+}
+
+export class RescheduleBookingDto {
+  @IsISO8601()
+  date: string;
+
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'Time must be HH:MM format' })
+  startTime: string;
+}
