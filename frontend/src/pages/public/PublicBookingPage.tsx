@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, CreditCard, WalletCards } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -29,12 +29,13 @@ const dateToday = () => new Date().toISOString().slice(0, 10);
 
 const PublicBookingPage: React.FC = () => {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const isCustomer = isAuthenticated && user?.role === 'CUSTOMER';
   const { data: customerProfile } = useCustomerProfile(isCustomer);
   const { data: business, isLoading } = usePublicBusiness(slug);
-  const [serviceId, setServiceId] = useState('');
+  const [serviceId, setServiceId] = useState(searchParams.get('service') || '');
   const [date, setDate] = useState(dateToday());
   const [selectedSlot, setSelectedSlot] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pay_later');

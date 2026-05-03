@@ -48,6 +48,25 @@ const bookingApi = {
     return data.data;
   },
 
+  cancelMine: async (bookingId: string, reason?: string): Promise<Booking> => {
+    const { data } = await axiosInstance.patch<ApiResponse<Booking>>(
+      `/bookings/customer/${bookingId}/cancel`,
+      { reason },
+    );
+    return data.data;
+  },
+
+  rescheduleMine: async (
+    bookingId: string,
+    payload: { date: string; startTime: string },
+  ): Promise<Booking> => {
+    const { data } = await axiosInstance.patch<ApiResponse<Booking>>(
+      `/bookings/customer/${bookingId}/reschedule`,
+      payload,
+    );
+    return data.data;
+  },
+
   slots: async (params: {
     businessId: string;
     serviceId: string;

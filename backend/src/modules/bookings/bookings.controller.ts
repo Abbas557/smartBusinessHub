@@ -19,6 +19,8 @@ import { Role } from '../users/user.schema';
 import { BookingsService } from './bookings.service';
 import {
   CreateBookingDto,
+  CancelBookingDto,
+  RescheduleBookingDto,
   SlotQueryDto,
   UpdateBookingStatusDto,
 } from './dto/booking.dto';
@@ -61,6 +63,26 @@ export class BookingsController {
   @Roles(Role.CUSTOMER)
   findMine(@CurrentUser() user: JwtPayload) {
     return this.bookingsService.findForCustomer(user.sub);
+  }
+
+  @Patch('customer/:id/cancel')
+  @Roles(Role.CUSTOMER)
+  cancelMine(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() dto: CancelBookingDto,
+  ) {
+    return this.bookingsService.cancelForCustomer(user.sub, id, dto.reason);
+  }
+
+  @Patch('customer/:id/reschedule')
+  @Roles(Role.CUSTOMER)
+  rescheduleMine(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() dto: RescheduleBookingDto,
+  ) {
+    return this.bookingsService.rescheduleForCustomer(user.sub, id, dto);
   }
 
   @Get(':id')

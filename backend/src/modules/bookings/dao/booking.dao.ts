@@ -33,6 +33,18 @@ export class BookingDao {
       .exec();
   }
 
+  async findByIdAndCustomerUser(
+    bookingId: string,
+    userId: string,
+  ): Promise<BookingDocument | null> {
+    return this.bookingModel
+      .findOne({
+        _id: new Types.ObjectId(bookingId),
+        customerUserId: new Types.ObjectId(userId),
+      })
+      .exec();
+  }
+
   async findByBusinessAndDate(
     businessId: string,
     date: Date,

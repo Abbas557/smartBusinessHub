@@ -77,6 +77,8 @@ export interface Business {
   hours: BusinessHours;
   isPublished: boolean;
   totalBookings: number;
+  distanceKm?: number;
+  distanceMeters?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -106,6 +108,13 @@ export interface Booking {
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod;
   paymentId: string | null;
+  cancelledAt?: string | null;
+  cancellationReason?: string;
+  rescheduledFrom?: {
+    date: string;
+    startTime: string;
+    endTime: string;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }

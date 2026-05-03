@@ -11,6 +11,10 @@ export interface CreateBusinessPayload {
   area?: string;
   pincode?: string;
   serviceRadiusKm?: number;
+  location?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 export interface UpdateBusinessPayload extends Partial<CreateBusinessPayload> {
@@ -84,6 +88,9 @@ const businessApi = {
     city?: string;
     area?: string;
     pincode?: string;
+    lat?: number;
+    lng?: number;
+    radiusKm?: number;
   }): Promise<Business[]> => {
     const { data } = await axiosInstance.get<ApiResponse<Business[]>>(
       '/business/public',

@@ -89,6 +89,9 @@ export class BusinessService {
     city?: string;
     area?: string;
     pincode?: string;
+    lat?: string;
+    lng?: string;
+    radiusKm?: string;
   }): Promise<BusinessDocument[]> {
     const filter: Record<string, any> = {};
 
@@ -114,8 +117,20 @@ export class BusinessService {
         { name: search },
         { description: search },
         { city: search },
+        { area: search },
         { 'services.name': search },
       ];
+    }
+
+    const lat = this.parseCoordinate(query.lat);
+    const lng = this.parseCoordinate(query.lng);
+    if (lat !== null && lng !== null) {
+      return this.businessDao.findPublishedNearby({
+        filter,
+        lat,
+        lng,
+        radiusKm: this.parseRadiusKm(query.radiusKm),
+      }) as any;
     }
 
     return this.businessDao.findPublished(filter);
@@ -241,5 +256,17 @@ export class BusinessService {
         coordinates: [location.lng, location.lat],
       },
     };
+  }
+
+  private parseCoordinate(value?: string): number | null {
+    if (value === undefined || value === '') return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private parseRadiusKm(value?: string): number {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return 25;
+    return Math.min(Math.max(parsed, 1), 100);
   }
 }

@@ -35,6 +35,11 @@ export const usePublicBusinesses = (params: {
   search?: string;
   category?: string;
   city?: string;
+  area?: string;
+  pincode?: string;
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
 }) => {
   return useQuery({
     queryKey: QUERY_KEYS.business.marketplace(params),

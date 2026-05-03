@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CalendarDays,
@@ -9,8 +9,13 @@ import {
   Sparkles,
   XCircle,
 } from 'lucide-react';
-import { useMyCustomerBookings } from '../../hooks/useBookings';
-import { Badge, Button, Card, Spinner } from '../../components/ui';
+import {
+  useBookingSlots,
+  useCancelCustomerBooking,
+  useMyCustomerBookings,
+  useRescheduleCustomerBooking,
+} from '../../hooks/useBookings';
+import { Badge, Button, Card, Input, Spinner } from '../../components/ui';
 import { Booking, BookingStatus, PaymentStatus } from '../../types';
 
 const currency = new Intl.NumberFormat('en-IN', {
@@ -39,7 +44,20 @@ const statusIcon = (status: BookingStatus) => {
   return <Clock3 className="h-4 w-4" />;
 };
 
+const dateToday = () => new Date().toISOString().slice(0, 10);
+
 const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
+  const [isRescheduling, setIsRescheduling] = useState(false);
+  const [newDate, setNewDate] = useState(dateToday());
+  const [newSlot, setNewSlot] = useState('');
+  const cancelBooking = useCancelCustomerBooking();
+  const rescheduleBooking = useRescheduleCustomerBooking();
+  const canChange = booking.status !== 'cancelled' && booking.status !== 'completed';
+  const { data: slots = [], isFetching: slotsLoading } = useBookingSlots(
+    booking.businessId,
+    booking.serviceId,
+    isRescheduling ? newDate : undefined,
+  );
   const date = new Date(booking.date).toLocaleDateString('en-IN', {
     weekday: 'short',
     day: 'numeric',
@@ -109,6 +127,117 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
             <p className="mt-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-500">
               {booking.notes}
             </p>
+          )}
+
+          {booking.rescheduledFrom && (
+            <p className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-700">
+              Rescheduled from {new Date(booking.rescheduledFrom.date).toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'short',
+              })}{' '}
+              at {booking.rescheduledFrom.startTime}.
+            </p>
+          )}
+
+          {canChange && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setIsRescheduling((value) => !value);
+                  setNewSlot('');
+                }}
+              >
+                Reschedule
+              </Button>
+              <Button
+                size="sm"
+                variant="danger"
+                isLoading={cancelBooking.isPending}
+                onClick={() =>
+                  cancelBooking.mutate({
+                    bookingId: booking._id,
+                    reason: 'Cancelled by customer',
+                  })
+                }
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+
+          {isRescheduling && canChange && (
+            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div className="grid gap-3 sm:grid-cols-[180px_minmax(0,1fr)]">
+                <Input
+                  label="New date"
+                  type="date"
+                  min={dateToday()}
+                  value={newDate}
+                  onChange={(event) => {
+                    setNewDate(event.target.value);
+                    setNewSlot('');
+                  }}
+                />
+                <div>
+                  <p className="mb-2 text-sm font-medium text-slate-700">Available slots</p>
+                  {slotsLoading ? (
+                    <Spinner />
+                  ) : slots.length === 0 ? (
+                    <p className="rounded-lg bg-white p-3 text-sm text-slate-500">
+                      No slots available.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                      {slots.map((slot) => (
+                        <button
+                          key={slot.startTime}
+                          type="button"
+                          disabled={!slot.available}
+                          onClick={() => setNewSlot(slot.startTime)}
+                          className={`rounded-lg border px-2 py-2 text-sm font-medium transition-colors ${
+                            newSlot === slot.startTime
+                              ? 'border-slate-900 bg-slate-900 text-white'
+                              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                          } disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}
+                        >
+                          {slot.startTime}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setIsRescheduling(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={!newSlot}
+                  isLoading={rescheduleBooking.isPending}
+                  onClick={() =>
+                    rescheduleBooking.mutate(
+                      {
+                        bookingId: booking._id,
+                        date: newDate,
+                        startTime: newSlot,
+                      },
+                      {
+                        onSuccess: () => setIsRescheduling(false),
+                      },
+                    )
+                  }
+                >
+                  Save new time
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       </div>
