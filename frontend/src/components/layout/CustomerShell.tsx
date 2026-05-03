@@ -14,24 +14,24 @@ const CustomerShell: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#f7faf9]">
-      <header className="sticky top-0 z-30 border-b border-emerald-900/10 bg-white/90 backdrop-blur-xl">
+    <div className="min-h-screen bg-brand-50">
+      <header className="sticky top-0 z-30 border-b border-brand-200/70 bg-brand-50/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-6">
           <Link to="/marketplace" className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-700 text-white shadow-sm">
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-white shadow-button">
               <Sparkles className="h-5 w-5" />
             </span>
             <span>
-              <span className="block text-sm font-bold tracking-tight text-slate-950">
+              <span className="block text-sm font-bold tracking-tight text-brand-900">
                 Smart Business Hub
               </span>
-              <span className="hidden text-xs text-slate-500 sm:block">
+              <span className="hidden text-xs text-brand-800/60 sm:block">
                 Local services, beautifully booked
               </span>
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 md:flex">
+          <nav className="hidden items-center gap-1 rounded-lg border border-brand-200 bg-white/70 p-1 md:flex">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -41,8 +41,8 @@ const CustomerShell: React.FC = () => {
                   className={({ isActive }) =>
                     `inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-white text-slate-950 shadow-sm'
-                        : 'text-slate-600 hover:text-slate-950'
+                        ? 'bg-white text-brand-900 shadow-sm'
+                        : 'text-brand-800/65 hover:text-brand-900'
                     }`
                   }
                 >
@@ -57,8 +57,8 @@ const CustomerShell: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <div className="hidden text-right sm:block">
-                  <p className="text-sm font-semibold text-slate-900">{user?.name || 'Customer'}</p>
-                  <p className="text-xs text-slate-500">Ready to book</p>
+                  <p className="text-sm font-semibold text-brand-900">{user?.name || 'Customer'}</p>
+                  <p className="text-xs text-brand-800/55">Ready to book</p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => logout()} leftIcon={<LogOut className="h-4 w-4" />}>
                   Logout
@@ -77,8 +77,8 @@ const CustomerShell: React.FC = () => {
           </div>
         </div>
 
-        <div className="border-t border-slate-100 px-4 py-2 md:hidden">
-          <nav className="grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-1">
+        <div className="border-t border-brand-100 px-4 py-2 md:hidden">
+          <nav className="grid grid-cols-3 gap-1 rounded-lg bg-white/70 p-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -87,7 +87,7 @@ const CustomerShell: React.FC = () => {
                   to={item.to}
                   className={({ isActive }) =>
                     `flex items-center justify-center gap-1 rounded-md px-2 py-2 text-xs font-medium ${
-                      isActive ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600'
+                      isActive ? 'bg-white text-brand-900 shadow-sm' : 'text-brand-800/65'
                     }`
                   }
                 >
@@ -100,13 +100,13 @@ const CustomerShell: React.FC = () => {
         </div>
       </header>
 
-      <div className="pointer-events-none fixed inset-x-0 top-0 -z-0 h-80 bg-[radial-gradient(circle_at_20%_15%,rgba(20,184,166,0.18),transparent_35%),radial-gradient(circle_at_80%_5%,rgba(14,165,233,0.16),transparent_30%)]" />
+      <div className="pointer-events-none fixed inset-x-0 top-0 -z-0 h-80 bg-[radial-gradient(circle_at_20%_15%,rgba(247,217,214,0.55),transparent_35%),radial-gradient(circle_at_80%_5%,rgba(184,147,79,0.18),transparent_30%)]" />
 
       <main className="relative z-10">
         <Outlet />
       </main>
 
-      <footer className="mx-auto flex max-w-7xl items-center justify-between px-4 py-8 text-xs text-slate-500 lg:px-6">
+      <footer className="mx-auto flex max-w-7xl items-center justify-between px-4 py-8 text-xs text-brand-800/55 lg:px-6">
         <span>Smart Business Hub</span>
         <span className="inline-flex items-center gap-1">
           <MapPin className="h-3.5 w-3.5" />

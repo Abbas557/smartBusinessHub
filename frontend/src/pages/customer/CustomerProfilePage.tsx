@@ -89,8 +89,8 @@ const CustomerProfilePage: React.FC = () => {
   return (
     <div className="mx-auto max-w-5xl px-5 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">Customer profile</h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <h1 className="font-display text-4xl font-semibold text-brand-900">Customer profile</h1>
+          <p className="mt-2 text-sm text-brand-800/60">
             Keep your location updated so marketplace results stay relevant.
           </p>
         </div>
@@ -101,7 +101,7 @@ const CustomerProfilePage: React.FC = () => {
               onSubmit={handleSubmit(submitProfile)}
               className="space-y-4"
             >
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
+              <div className="rounded-lg border border-brand-100 bg-white p-4">
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Find your address
                 </label>
@@ -123,13 +123,13 @@ const CustomerProfilePage: React.FC = () => {
                   </Button>
                 </div>
                 {addressResults.length > 0 && (
-                  <div className="mt-3 divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
+                    <div className="mt-3 divide-y divide-brand-100 rounded-lg border border-brand-100 bg-white">
                     {addressResults.map((result) => (
                       <button
                         key={`${result.lat}-${result.lng}`}
                         type="button"
                         onClick={() => chooseAddress(result)}
-                        className="block w-full px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"
+                        className="block w-full px-3 py-2 text-left text-sm text-brand-800/70 hover:bg-brand-50"
                       >
                         {result.label}
                       </button>
@@ -150,18 +150,18 @@ const CustomerProfilePage: React.FC = () => {
           </Card>
 
           <Card>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-100 text-teal-700">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blush-100 text-brand-600">
               <MapPin className="h-5 w-5" />
             </div>
-            <h2 className="mt-4 font-semibold text-slate-900">{user?.name}</h2>
-            <p className="mt-1 text-sm text-slate-500">{user?.email}</p>
-            <div className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+            <h2 className="mt-4 font-semibold text-brand-900">{user?.name}</h2>
+            <p className="mt-1 text-sm text-brand-800/60">{user?.email}</p>
+            <div className="mt-4 rounded-lg bg-brand-50 p-3 text-sm text-brand-800/70">
               {[profile?.area, profile?.city, profile?.pincode]
                 .filter(Boolean)
                 .join(', ') || 'No location saved yet'}
             </div>
             {selectedLocation && (
-              <div className="mt-3 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">
+              <div className="mt-3 rounded-lg bg-blush-100 p-3 text-xs text-brand-800">
                 Coordinates saved: {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
               </div>
             )}

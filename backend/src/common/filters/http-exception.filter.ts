@@ -51,6 +51,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       this.logger.error(`Unhandled exception: ${exception.message}`, exception.stack);
     }
 
+    if (response.headersSent) {
+      return;
+    }
+
     response.status(status).json({
       success: false,
       statusCode: status,

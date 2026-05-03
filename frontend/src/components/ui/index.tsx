@@ -21,12 +21,12 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const base = 'inline-flex min-h-9 items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
+  const base = 'inline-flex min-h-9 items-center justify-center gap-2 rounded-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
 
   const variants = {
-    primary: 'bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-500',
-    secondary: 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-500',
-    ghost: 'text-slate-600 hover:bg-slate-100 focus:ring-slate-400',
+    primary: 'bg-brand-600 text-white shadow-button hover:bg-brand-700 focus:ring-brand-500',
+    secondary: 'border border-brand-200 bg-white/90 text-brand-800 shadow-sm hover:bg-brand-50 focus:ring-brand-400',
+    ghost: 'text-brand-700 hover:bg-brand-100 focus:ring-brand-300',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
   };
 
@@ -64,7 +64,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1">
         {label && (
-          <label htmlFor={inputId} className="text-sm font-medium text-gray-700">
+          <label htmlFor={inputId} className="text-sm font-medium text-brand-900">
             {label}
             {props.required && <span className="text-red-500 ml-1">*</span>}
           </label>
@@ -79,13 +79,13 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             className={clsx(
-              'w-full rounded-lg border px-3 py-2 text-sm transition-colors',
+              'w-full rounded-lg border px-3 py-2 text-sm shadow-input transition-colors',
               leftIcon && 'pl-9',
-              'focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200',
-              'placeholder:text-slate-400',
+              'focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100',
+              'placeholder:text-brand-900/35',
               error
                 ? 'border-red-400 bg-red-50'
-                : 'border-slate-300 bg-white hover:border-slate-400',
+                : 'border-brand-200 bg-white/90 hover:border-brand-300',
               className,
             )}
             {...props}
@@ -93,7 +93,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         </div>
         {error && <p className="text-xs text-red-500">{error}</p>}
         {helperText && !error && (
-          <p className="text-xs text-gray-500">{helperText}</p>
+          <p className="text-xs text-brand-800/60">{helperText}</p>
         )}
       </div>
     );
@@ -115,7 +115,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="flex flex-col gap-1">
         {label && (
-          <label htmlFor={inputId} className="text-sm font-medium text-gray-700">
+          <label htmlFor={inputId} className="text-sm font-medium text-brand-900">
             {label}
           </label>
         )}
@@ -124,9 +124,9 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           id={inputId}
           rows={4}
           className={clsx(
-            'w-full resize-none rounded-lg border px-3 py-2 text-sm transition-colors',
-            'focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200',
-            error ? 'border-red-400 bg-red-50' : 'border-slate-300 bg-white',
+            'w-full resize-none rounded-lg border px-3 py-2 text-sm shadow-input transition-colors',
+            'focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100',
+            error ? 'border-red-400 bg-red-50' : 'border-brand-200 bg-white/90',
             className,
           )}
           {...props}
@@ -153,7 +153,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="flex flex-col gap-1">
         {label && (
-          <label htmlFor={inputId} className="text-sm font-medium text-gray-700">
+          <label htmlFor={inputId} className="text-sm font-medium text-brand-900">
             {label}
           </label>
         )}
@@ -161,9 +161,9 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           id={inputId}
           className={clsx(
-            'w-full rounded-lg border bg-white px-3 py-2 text-sm transition-colors',
-            'focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200',
-            error ? 'border-red-400' : 'border-slate-300',
+            'w-full rounded-lg border bg-white/90 px-3 py-2 text-sm shadow-input transition-colors',
+            'focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100',
+            error ? 'border-red-400' : 'border-brand-200',
             className,
           )}
           {...props}
@@ -193,8 +193,8 @@ export const Badge: React.FC<BadgeProps> = ({ children, variant = 'gray' }) => {
     green: 'bg-emerald-100 text-emerald-700',
     yellow: 'bg-amber-100 text-amber-700',
     red: 'bg-red-100 text-red-700',
-    blue: 'bg-sky-100 text-sky-700',
-    gray: 'bg-slate-100 text-slate-600',
+    blue: 'bg-blush-200 text-brand-700',
+    gray: 'bg-brand-100 text-brand-700',
   };
 
   return (
@@ -208,7 +208,7 @@ export const Badge: React.FC<BadgeProps> = ({ children, variant = 'gray' }) => {
 
 export const Spinner: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }) => {
   const sizes = { sm: 'w-4 h-4', md: 'w-6 h-6', lg: 'w-10 h-10' };
-  return <Loader2 className={clsx('animate-spin text-slate-700', sizes[size])} />;
+  return <Loader2 className={clsx('animate-spin text-brand-700', sizes[size])} />;
 };
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
@@ -218,7 +218,7 @@ export const Card: React.FC<{
   className?: string;
   padding?: boolean;
 }> = ({ children, className, padding = true }) => (
-  <div className={clsx('rounded-lg border border-slate-200/80 bg-white/95 shadow-sm shadow-slate-200/60', padding && 'p-6', className)}>
+  <div className={clsx('rounded-lg border border-brand-100 bg-white/95 shadow-soft', padding && 'p-6', className)}>
     {children}
   </div>
 );

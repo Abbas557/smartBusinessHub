@@ -35,12 +35,12 @@ const StatCard: React.FC<{
   color: string;
   sub?: string;
 }> = ({ label, value, icon, color, sub }) => (
-  <Card className="transition-shadow hover:shadow-md">
+  <Card className="transition-shadow hover:shadow-soft">
     <div className="flex items-start justify-between gap-3">
       <div>
-        <p className="mb-1 text-sm text-slate-500">{label}</p>
-        <p className="text-2xl font-bold text-slate-900">{value}</p>
-        {sub && <p className="mt-1 text-xs text-slate-400">{sub}</p>}
+        <p className="mb-1 text-sm text-brand-800/60">{label}</p>
+        <p className="text-2xl font-bold text-brand-900">{value}</p>
+        {sub && <p className="mt-1 text-xs text-brand-800/45">{sub}</p>}
       </div>
       <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${color}`}>
         {icon}
@@ -61,7 +61,7 @@ const MiniBarChart: React.FC<{
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="h-56 w-full" role="img">
-      <line x1="0" y1="150" x2={width} y2="150" stroke="#e2e8f0" />
+      <line x1="0" y1="150" x2={width} y2="150" stroke="#ead8c7" />
       {data.map((item, index) => {
         const barHeight = (item.value / max) * 120;
         const x = index * (barWidth + gap);
@@ -99,7 +99,7 @@ const DonutChart: React.FC<{
           cy="60"
           r="42"
           fill="none"
-          stroke="#10b981"
+          stroke="#a8343d"
           strokeDasharray={`${circumference * paidPercent} ${circumference}`}
           strokeLinecap="round"
           strokeWidth="16"
@@ -115,11 +115,11 @@ const DonutChart: React.FC<{
       <div className="space-y-3 text-sm">
         <div>
           <p className="text-slate-500">Paid revenue</p>
-          <p className="font-semibold text-slate-900">{currency.format(paid)}</p>
+          <p className="font-semibold text-brand-900">{currency.format(paid)}</p>
         </div>
         <div>
           <p className="text-slate-500">Unpaid pipeline</p>
-          <p className="font-semibold text-slate-900">{currency.format(unpaid)}</p>
+          <p className="font-semibold text-brand-900">{currency.format(unpaid)}</p>
         </div>
       </div>
     </div>
@@ -210,12 +210,12 @@ const DashboardHome: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      <div className="overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-lg border border-brand-100 bg-white shadow-soft">
         <div className="dark-grid p-6 text-white lg:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm font-medium text-teal-100/80">{greeting()}</p>
-              <h1 className="mt-1 text-4xl font-bold tracking-tight">
+              <p className="text-sm font-medium text-blush-100/80">{greeting()}</p>
+              <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">
                 {user?.name?.split(' ')[0] || 'Business owner'}'s revenue command center
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200">
@@ -246,11 +246,11 @@ const DashboardHome: React.FC = () => {
       </div>
 
       {!business && (
-        <div className="flex items-start gap-4 rounded-lg border border-sky-200 bg-sky-50 p-5">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-sky-600" />
+        <div className="flex items-start gap-4 rounded-lg border border-gold-100 bg-gold-100/60 p-5">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-gold-700" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-sky-950">Set up your business profile to get started</p>
-            <p className="mt-0.5 text-sm text-sky-700">
+            <p className="text-sm font-semibold text-brand-900">Set up your business profile to get started</p>
+            <p className="mt-0.5 text-sm text-brand-800/70">
               Create your profile, add your services, and publish your page.
             </p>
           </div>
@@ -266,28 +266,28 @@ const DashboardHome: React.FC = () => {
         <StatCard
           label="Projected Revenue"
           value={currency.format(projectedRevenue)}
-          icon={<IndianRupee className="h-5 w-5 text-emerald-600" />}
-          color="bg-emerald-50"
+          icon={<IndianRupee className="h-5 w-5 text-brand-600" />}
+          color="bg-blush-100"
           sub="All non-cancelled bookings"
         />
         <StatCard
           label="Paid Revenue"
           value={currency.format(paidRevenue)}
-          icon={<CreditCard className="h-5 w-5 text-sky-600" />}
-          color="bg-sky-50"
+          icon={<CreditCard className="h-5 w-5 text-gold-700" />}
+          color="bg-gold-100"
           sub={`${conversionRate}% payment conversion`}
         />
         <StatCard
           label="Average Order"
           value={currency.format(averageOrderValue)}
-          icon={<TrendingUp className="h-5 w-5 text-violet-600" />}
-          color="bg-violet-50"
+          icon={<TrendingUp className="h-5 w-5 text-brand-700" />}
+          color="bg-brand-100"
           sub="Revenue per booking"
         />
         <StatCard
           label="Customers"
           value={customers.length}
-          icon={<Users className="h-5 w-5 text-amber-600" />}
+          icon={<Users className="h-5 w-5 text-gold-700" />}
           color="bg-amber-50"
           sub={`${bookings.length || business?.totalBookings || 0} total bookings`}
         />
@@ -303,7 +303,7 @@ const DashboardHome: React.FC = () => {
               </div>
               <BarChart3 className="h-5 w-5 text-slate-500" />
             </div>
-            <MiniBarChart data={monthlyRevenue} color="#0f766e" />
+            <MiniBarChart data={monthlyRevenue} color="#a8343d" />
           </Card>
 
           <Card>
@@ -330,7 +330,7 @@ const DashboardHome: React.FC = () => {
               <Activity className="h-5 w-5 text-slate-500" />
             </div>
             {serviceRevenue.length === 0 ? (
-              <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">No service revenue yet.</p>
+              <p className="rounded-lg bg-brand-50 p-4 text-sm text-brand-800/60">No service revenue yet.</p>
             ) : (
               <div className="space-y-4">
                 {serviceRevenue.map((service) => {
@@ -342,7 +342,7 @@ const DashboardHome: React.FC = () => {
                         <span className="font-semibold text-slate-900">{currency.format(service.value)}</span>
                       </div>
                       <div className="h-3 rounded-full bg-slate-200">
-                        <div className="h-3 rounded-full bg-slate-900" style={{ width: `${width}%` }} />
+                        <div className="h-3 rounded-full bg-brand-600" style={{ width: `${width}%` }} />
                       </div>
                     </div>
                   );
@@ -370,12 +370,12 @@ const DashboardHome: React.FC = () => {
                     <div
                       className={`h-2 rounded-full ${
                         status === 'confirmed'
-                          ? 'bg-sky-500'
+                          ? 'bg-gold-500'
                           : status === 'completed'
-                            ? 'bg-emerald-500'
+                            ? 'bg-brand-600'
                             : status === 'cancelled'
                               ? 'bg-rose-500'
-                              : 'bg-amber-500'
+                              : 'bg-brand-300'
                       }`}
                       style={{ width: `${(statusCounts[status] / maxStatus) * 100}%` }}
                     />
@@ -398,11 +398,11 @@ const DashboardHome: React.FC = () => {
               <Calendar className="h-5 w-5 text-slate-500" />
             </div>
             {upcoming.length === 0 ? (
-              <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">No upcoming bookings yet.</p>
+              <p className="rounded-lg bg-brand-50 p-4 text-sm text-brand-800/60">No upcoming bookings yet.</p>
             ) : (
               <div className="space-y-3">
                 {upcoming.map((booking) => (
-                  <div key={booking._id} className="rounded-lg border border-slate-200 bg-white p-3">
+                  <div key={booking._id} className="rounded-lg border border-brand-100 bg-white p-3">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-medium text-slate-900">{booking.customerName}</p>
                       <Badge variant={booking.paymentStatus === 'paid' ? 'green' : 'yellow'}>
@@ -425,14 +425,14 @@ const DashboardHome: React.FC = () => {
                 <p className="mt-1 text-sm text-slate-500">{completedSteps} of {setupSteps.length} setup steps complete.</p>
               </div>
               <div className="h-2 w-full rounded-full bg-slate-100 sm:w-56">
-                <div className="h-2 rounded-full bg-emerald-500 transition-all" style={{ width: `${(completedSteps / setupSteps.length) * 100}%` }} />
+                <div className="h-2 rounded-full bg-brand-600 transition-all" style={{ width: `${(completedSteps / setupSteps.length) * 100}%` }} />
               </div>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {setupSteps.map((step) => (
-                <div key={step.label} className="flex items-center gap-3 rounded-lg border border-slate-200 p-3">
+                <div key={step.label} className="flex items-center gap-3 rounded-lg border border-brand-100 p-3">
                   {step.done ? (
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                    <CheckCircle2 className="h-5 w-5 text-brand-600" />
                   ) : (
                     <Clock3 className="h-5 w-5 text-slate-400" />
                   )}

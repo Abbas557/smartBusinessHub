@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -15,32 +15,46 @@
   }
 
   body {
-    @apply text-slate-900 bg-slate-50;
+    @apply bg-brand-50 text-brand-900;
   }
 }
 
 @layer components {
   .app-surface {
     background:
-      linear-gradient(135deg, rgba(15, 23, 42, 0.04), transparent 32%),
-      linear-gradient(315deg, rgba(20, 184, 166, 0.08), transparent 28%),
-      radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.08), transparent 28%),
-      #f8fafc;
+      linear-gradient(135deg, rgba(247, 217, 214, 0.42), transparent 32%),
+      linear-gradient(315deg, rgba(184, 147, 79, 0.12), transparent 28%),
+      radial-gradient(circle at 50% 0%, rgba(215, 143, 134, 0.16), transparent 28%),
+      #fbf8f1;
   }
 
   .mesh-panel {
     background:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78)),
-      repeating-linear-gradient(135deg, rgba(15, 23, 42, 0.06) 0 1px, transparent 1px 14px);
+      linear-gradient(135deg, rgba(255, 252, 247, 0.94), rgba(255, 248, 245, 0.82)),
+      repeating-linear-gradient(135deg, rgba(95, 29, 36, 0.05) 0 1px, transparent 1px 14px);
   }
 
   .dark-grid {
     background:
-      linear-gradient(135deg, rgba(20, 184, 166, 0.24), transparent 34%),
-      linear-gradient(315deg, rgba(251, 191, 36, 0.18), transparent 30%),
+      linear-gradient(135deg, rgba(215, 143, 134, 0.36), transparent 34%),
+      linear-gradient(315deg, rgba(184, 147, 79, 0.2), transparent 30%),
       repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 16px),
-      #020617;
+      #2b1715;
   }
+
+  .auth-surface {
+    background:
+      radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.86), transparent 26%),
+      radial-gradient(circle at 72% 28%, rgba(239, 185, 178, 0.54), transparent 34%),
+      linear-gradient(145deg, #fff8f5 0%, #f7d9d6 55%, #fbf8f1 100%);
+  }
+
+  .auth-form-surface {
+    background:
+      radial-gradient(circle at 88% 8%, rgba(247, 217, 214, 0.24), transparent 28%),
+      #fbf8f1;
+  }
+
 }
 
 @layer utilities {

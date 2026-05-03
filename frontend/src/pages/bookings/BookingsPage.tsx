@@ -39,8 +39,8 @@ const BookingsPage: React.FC = () => {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-950">Bookings</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="font-display text-4xl font-semibold tracking-tight text-brand-900">Bookings</h1>
+        <p className="mt-1 text-sm text-brand-800/60">
           Review customer appointments and keep their status current.
         </p>
       </div>
@@ -57,7 +57,7 @@ const BookingsPage: React.FC = () => {
         <Card padding={false}>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-brand-100 bg-brand-50 text-xs uppercase text-brand-800/55">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Customer</th>
                   <th className="px-4 py-3 font-semibold">Service</th>
@@ -69,22 +69,22 @@ const BookingsPage: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {bookings.map((booking) => (
-                  <tr key={booking._id} className="align-top hover:bg-slate-50">
+                  <tr key={booking._id} className="align-top hover:bg-brand-50">
                     <td className="px-4 py-4">
-                      <p className="font-medium text-slate-900">{booking.customerName}</p>
-                      <p className="text-xs text-slate-500">{booking.customerEmail}</p>
+                      <p className="font-medium text-brand-900">{booking.customerName}</p>
+                      <p className="text-xs text-brand-800/55">{booking.customerEmail}</p>
                       {booking.customerPhone && (
-                        <p className="text-xs text-slate-500">{booking.customerPhone}</p>
+                        <p className="text-xs text-brand-800/55">{booking.customerPhone}</p>
                       )}
                     </td>
                     <td className="px-4 py-4">
-                      <p className="font-medium text-slate-900">{booking.serviceName}</p>
+                      <p className="font-medium text-brand-900">{booking.serviceName}</p>
                     </td>
                     <td className="px-4 py-4">
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-brand-900">
                         {format(new Date(booking.date), 'dd MMM yyyy')}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-brand-800/55">
                         {booking.startTime} - {booking.endTime}
                       </p>
                     </td>
@@ -107,7 +107,7 @@ const BookingsPage: React.FC = () => {
                         aria-label="Update booking status"
                       />
                     </td>
-                    <td className="max-w-xs px-4 py-4 text-slate-500">
+                    <td className="max-w-xs px-4 py-4 text-brand-800/60">
                       {booking.notes || '—'}
                     </td>
                     <td className="px-4 py-4 text-right">

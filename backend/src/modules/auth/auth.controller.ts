@@ -166,13 +166,13 @@ export class AuthController {
         avatarUrl?: string;
       };
     },
-    @Res({ passthrough: true }) res: Response,
-  ) {
+    @Res() res: Response,
+  ): Promise<void> {
     const result = await this.authService.handleGoogleLogin(req.user);
     this.setRefreshCookie(res, result.refreshToken);
     const frontendUrl =
       this.configService.get<string>('FRONTEND_URL') || 'http://127.0.0.1:3000';
-    return res.redirect(`${frontendUrl}/dashboard`);
+    res.redirect(`${frontendUrl}/dashboard`);
   }
 
   // ─── PRIVATE HELPERS ───────────────────────────────────────────────────────

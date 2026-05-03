@@ -56,18 +56,18 @@ const AdminDashboardPage: React.FC = () => {
 
   if (overviewLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center app-surface">
         <Spinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
+    <div className="min-h-screen app-surface">
+      <header className="border-b border-brand-100 bg-brand-50/95">
         <div className="mx-auto max-w-7xl px-5 py-5">
-          <p className="text-sm font-medium text-slate-500">Admin console</p>
-          <h1 className="mt-1 text-3xl font-bold text-slate-950">
+          <p className="text-sm font-medium text-brand-800/60">Admin console</p>
+          <h1 className="mt-1 font-display text-4xl font-semibold text-brand-900">
             Platform moderation
           </h1>
         </div>
@@ -77,9 +77,9 @@ const AdminDashboardPage: React.FC = () => {
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
           {stats.map(({ label, value, Icon }) => (
             <Card key={label} className="p-4">
-              <Icon className="h-5 w-5 text-emerald-700" />
-              <p className="mt-3 text-2xl font-bold text-slate-950">{value}</p>
-              <p className="text-sm text-slate-500">{label}</p>
+              <Icon className="h-5 w-5 text-brand-600" />
+              <p className="mt-3 text-2xl font-bold text-brand-900">{value}</p>
+              <p className="text-sm text-brand-800/60">{label}</p>
             </Card>
           ))}
         </section>
@@ -92,8 +92,8 @@ const AdminDashboardPage: React.FC = () => {
               onClick={() => setTab(item)}
               className={`rounded-lg px-4 py-2 text-sm font-medium capitalize ${
                 tab === item
-                  ? 'bg-slate-950 text-white'
-                  : 'border border-slate-200 bg-white text-slate-600'
+                  ? 'bg-brand-700 text-white shadow-button'
+                  : 'border border-brand-100 bg-white text-brand-800/65'
               }`}
             >
               {item}
@@ -103,16 +103,16 @@ const AdminDashboardPage: React.FC = () => {
 
         {tab === 'businesses' && (
           <Card>
-            <h2 className="text-lg font-semibold text-slate-950">Vendor verification</h2>
-            <div className="mt-4 divide-y divide-slate-100">
+            <h2 className="font-display text-2xl font-semibold text-brand-900">Vendor verification</h2>
+            <div className="mt-4 divide-y divide-brand-100">
               {businesses.map((business) => (
                 <div
                   key={business._id}
                   className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between"
                 >
                   <div>
-                    <p className="font-medium text-slate-950">{business.name}</p>
-                    <p className="text-sm text-slate-500">
+                    <p className="font-medium text-brand-900">{business.name}</p>
+                    <p className="text-sm text-brand-800/60">
                       {[business.area, business.city, business.category]
                         .filter(Boolean)
                         .join(' · ')}
@@ -144,16 +144,16 @@ const AdminDashboardPage: React.FC = () => {
 
         {tab === 'reviews' && (
           <Card>
-            <h2 className="text-lg font-semibold text-slate-950">Review moderation</h2>
-            <div className="mt-4 divide-y divide-slate-100">
+            <h2 className="font-display text-2xl font-semibold text-brand-900">Review moderation</h2>
+            <div className="mt-4 divide-y divide-brand-100">
               {reviews.map((review) => (
                 <div key={review._id} className="py-4">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
-                      <p className="font-medium text-slate-950">
+                      <p className="font-medium text-brand-900">
                         {review.customerName}
                       </p>
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-1 text-sm text-brand-800/60">
                         {review.comment || 'No comment'}
                       </p>
                     </div>
@@ -197,12 +197,12 @@ const AdminDashboardPage: React.FC = () => {
 
         {tab === 'users' && (
           <Card>
-            <h2 className="text-lg font-semibold text-slate-950">Users</h2>
+            <h2 className="font-display text-2xl font-semibold text-brand-900">Users</h2>
             <div className="mt-4 grid gap-3">
               {users.map((user) => (
-                <div key={user._id} className="rounded-lg border border-slate-200 p-4">
-                  <p className="font-medium text-slate-950">{user.name}</p>
-                  <p className="text-sm text-slate-500">{user.email}</p>
+                <div key={user._id} className="rounded-lg border border-brand-100 p-4">
+                  <p className="font-medium text-brand-900">{user.name}</p>
+                  <p className="text-sm text-brand-800/60">{user.email}</p>
                   <Badge>{user.role}</Badge>
                 </div>
               ))}
@@ -212,12 +212,12 @@ const AdminDashboardPage: React.FC = () => {
 
         {tab === 'bookings' && (
           <Card>
-            <h2 className="text-lg font-semibold text-slate-950">Bookings</h2>
-            <div className="mt-4 divide-y divide-slate-100">
+            <h2 className="font-display text-2xl font-semibold text-brand-900">Bookings</h2>
+            <div className="mt-4 divide-y divide-brand-100">
               {bookings.slice(0, 40).map((booking) => (
                 <div key={booking._id} className="flex justify-between gap-3 py-3 text-sm">
                   <span>{booking.serviceName}</span>
-                  <span className="text-slate-500">{booking.status}</span>
+                  <span className="text-brand-800/60">{booking.status}</span>
                 </div>
               ))}
             </div>
@@ -226,13 +226,13 @@ const AdminDashboardPage: React.FC = () => {
 
         {tab === 'payments' && (
           <Card>
-            <h2 className="text-lg font-semibold text-slate-950">Payments</h2>
-            <div className="mt-4 divide-y divide-slate-100">
+            <h2 className="font-display text-2xl font-semibold text-brand-900">Payments</h2>
+            <div className="mt-4 divide-y divide-brand-100">
               {payments.slice(0, 40).map((payment) => (
                 <div key={payment._id} className="flex justify-between gap-3 py-3 text-sm">
                   <span>{payment.provider}</span>
                   <span className="font-medium">₹{payment.amount}</span>
-                  <span className="text-slate-500">{payment.status}</span>
+                  <span className="text-brand-800/60">{payment.status}</span>
                 </div>
               ))}
             </div>

@@ -228,15 +228,15 @@ const PublicBookingPage: React.FC = () => {
     return (
       <div className="flex min-h-screen items-center justify-center app-surface p-4">
         <Card className="max-w-md text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg bg-blush-100 text-brand-600">
             <CheckCircle2 className="h-7 w-7" />
           </div>
-          <h1 className="mt-5 text-xl font-semibold text-slate-900">Booking requested</h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <h1 className="mt-5 font-display text-2xl font-semibold text-brand-900">Booking requested</h1>
+          <p className="mt-2 text-sm text-brand-800/60">
             Your appointment request has been sent to {business.name}.
           </p>
           {confirmedBooking && (
-            <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4 text-left text-sm">
+            <div className="mt-5 rounded-lg border border-brand-100 bg-brand-50 p-4 text-left text-sm">
               <div className="flex justify-between">
                 <span className="text-slate-500">Service</span>
                 <span className="font-medium text-slate-900">{confirmedBooking.serviceName}</span>
@@ -275,10 +275,10 @@ const PublicBookingPage: React.FC = () => {
     <div className="min-h-screen app-surface">
       <main className="mx-auto grid max-w-5xl gap-6 px-5 py-8 lg:grid-cols-[320px_minmax(0,1fr)]">
         <Card className="dark-grid h-fit text-white">
-          <Link to={`/b/${business.slug}`} className="text-sm font-medium text-teal-100/80 hover:text-white">
+          <Link to={`/b/${business.slug}`} className="text-sm font-medium text-blush-100/80 hover:text-white">
             Back to profile
           </Link>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight text-white">
+          <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight text-white">
             Book {business.name}
           </h1>
           <p className="mt-3 text-sm leading-6 text-slate-200">
@@ -311,14 +311,14 @@ const PublicBookingPage: React.FC = () => {
             </div>
 
             {selectedService && (
-              <div className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 lg:grid-cols-3">
+              <div className="grid gap-3 rounded-lg border border-brand-100 bg-white p-4 lg:grid-cols-3">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('pay_later')}
                   className={`flex items-start gap-3 rounded-lg border p-4 text-left transition-colors ${
                     paymentMethod === 'pay_later'
-                      ? 'border-slate-900 bg-slate-900 text-white'
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-white'
+                      ? 'border-brand-700 bg-brand-700 text-white'
+                      : 'border-brand-100 bg-brand-50 text-brand-800 hover:bg-white'
                   }`}
                 >
                   <WalletCards className="mt-0.5 h-5 w-5" />
@@ -332,8 +332,8 @@ const PublicBookingPage: React.FC = () => {
                   onClick={() => setPaymentMethod('demo_card')}
                   className={`flex items-start gap-3 rounded-lg border p-4 text-left transition-colors ${
                     paymentMethod === 'demo_card'
-                      ? 'border-emerald-700 bg-emerald-700 text-white'
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-white'
+                      ? 'border-gold-700 bg-gold-700 text-white'
+                      : 'border-brand-100 bg-brand-50 text-brand-800 hover:bg-white'
                   }`}
                 >
                   <CreditCard className="mt-0.5 h-5 w-5" />
@@ -347,8 +347,8 @@ const PublicBookingPage: React.FC = () => {
                   onClick={() => setPaymentMethod('card')}
                   className={`flex items-start gap-3 rounded-lg border p-4 text-left transition-colors ${
                     paymentMethod === 'card'
-                      ? 'border-sky-700 bg-sky-700 text-white'
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-white'
+                      ? 'border-brand-600 bg-brand-600 text-white'
+                      : 'border-brand-100 bg-brand-50 text-brand-800 hover:bg-white'
                   }`}
                 >
                   <CreditCard className="mt-0.5 h-5 w-5" />
@@ -361,11 +361,11 @@ const PublicBookingPage: React.FC = () => {
             )}
 
             <div>
-              <p className="mb-2 text-sm font-medium text-slate-700">Available times</p>
+              <p className="mb-2 text-sm font-medium text-brand-900">Available times</p>
               {slotsLoading ? (
                 <Spinner />
               ) : slots.length === 0 ? (
-                <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
+                <p className="rounded-lg bg-brand-50 p-4 text-sm text-brand-800/60">
                   No slots available for this date.
                 </p>
               ) : (
@@ -378,9 +378,9 @@ const PublicBookingPage: React.FC = () => {
                       onClick={() => setSelectedSlot(slot.startTime)}
                       className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                         selectedSlot === slot.startTime
-                          ? 'border-slate-900 bg-slate-900 text-white'
-                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                      } disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}
+                          ? 'border-brand-700 bg-brand-700 text-white'
+                          : 'border-brand-100 bg-white text-brand-800 hover:bg-brand-50'
+                      } disabled:cursor-not-allowed disabled:bg-brand-100 disabled:text-brand-800/35`}
                     >
                       {slot.startTime}
                     </button>

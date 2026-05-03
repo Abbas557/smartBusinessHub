@@ -159,7 +159,7 @@ const ProfileTab: React.FC = () => {
       <div className="space-y-6">
       {/* Publish status bar */}
       {business && (
-        <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 rounded-lg border border-brand-100 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <Badge variant={business.isPublished ? 'green' : 'yellow'}>
               {business.isPublished ? 'Published' : 'Draft'}
@@ -219,7 +219,7 @@ const ProfileTab: React.FC = () => {
             placeholder="123 MG Road"
             {...register('address')}
           />
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-lg border border-brand-100 bg-brand-50 p-4">
             <label className="mb-2 block text-sm font-medium text-slate-700">
               Map coordinates
             </label>
@@ -241,13 +241,13 @@ const ProfileTab: React.FC = () => {
               </Button>
             </div>
             {addressResults.length > 0 && (
-              <div className="mt-3 divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
+              <div className="mt-3 divide-y divide-brand-100 rounded-lg border border-brand-100 bg-white">
                 {addressResults.map((result) => (
                   <button
                     key={`${result.lat}-${result.lng}`}
                     type="button"
                     onClick={() => chooseAddress(result)}
-                    className="block w-full px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"
+                    className="block w-full px-3 py-2 text-left text-sm text-brand-800/70 hover:bg-brand-50"
                   >
                     {result.label}
                   </button>
@@ -255,7 +255,7 @@ const ProfileTab: React.FC = () => {
               </div>
             )}
             {selectedLocation && (
-              <p className="mt-3 text-xs text-emerald-700">
+              <p className="mt-3 text-xs text-brand-700">
                 Coordinates selected: {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
               </p>
             )}
@@ -303,7 +303,7 @@ const ProfileTab: React.FC = () => {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-slate-200 p-4">
+            <div className="rounded-lg border border-brand-100 p-4">
               <div className="mb-3 flex h-24 items-center justify-center rounded-lg bg-slate-100">
                 {business.logoUrl ? (
                   <img src={business.logoUrl} alt="Business logo" className="max-h-20 rounded-md" />
@@ -321,7 +321,7 @@ const ProfileTab: React.FC = () => {
               />
             </div>
 
-            <div className="rounded-lg border border-slate-200 p-4">
+            <div className="rounded-lg border border-brand-100 p-4">
               <div className="mb-3 flex h-24 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
                 {business.bannerUrl ? (
                   <img src={business.bannerUrl} alt="Business banner" className="h-full w-full object-cover" />
@@ -368,9 +368,9 @@ const ProfileTab: React.FC = () => {
           ))}
         </div>
         {business?.isPublished && (
-          <div className="mt-6 rounded-lg border border-slate-200 bg-slate-950 p-4 text-white">
+          <div className="mt-6 rounded-lg border border-brand-200 bg-brand-900 p-4 text-white">
             <div className="mb-3 flex items-center gap-2">
-              <Code2 className="h-4 w-4 text-teal-300" />
+              <Code2 className="h-4 w-4 text-blush-200" />
               <p className="text-sm font-semibold">Booking widget</p>
             </div>
             <pre className="overflow-x-auto whitespace-pre-wrap text-xs leading-5 text-slate-200">{`<script
@@ -501,7 +501,7 @@ const ServicesTab: React.FC = () => {
         <Card padding={false}>
           <ul className="divide-y divide-gray-100">
             {business.services.map((service) => (
-              <li key={service._id} className="flex items-center justify-between p-4 transition-colors hover:bg-slate-50">
+              <li key={service._id} className="flex items-center justify-between p-4 transition-colors hover:bg-brand-50">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-900">{service.name}</p>
                   <p className="text-xs text-slate-500 mt-0.5">
@@ -642,25 +642,25 @@ const BusinessPage: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900 text-white">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-white">
           <ListChecks className="h-5 w-5" />
         </div>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950">My Business</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight text-brand-900">My Business</h1>
+        <p className="mt-1 text-sm text-brand-800/60">
           Manage your profile, services, and business hours.
         </p>
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1 border-b border-brand-100">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
               activeTab === tab.id
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-brand-600 text-brand-700'
+                : 'border-transparent text-brand-800/50 hover:text-brand-800'
             }`}
           >
             {tab.label}

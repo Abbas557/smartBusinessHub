@@ -18,8 +18,8 @@ const CustomersPage: React.FC = () => {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-950">Customers</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="font-display text-4xl font-semibold tracking-tight text-brand-900">Customers</h1>
+        <p className="mt-1 text-sm text-brand-800/60">
           Customers are created automatically when someone books.
         </p>
       </div>
@@ -38,22 +38,22 @@ const CustomersPage: React.FC = () => {
             <Card key={customer._id}>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="font-semibold text-slate-900">{customer.name}</h2>
-                  <p className="mt-1 text-sm text-slate-500">{customer.email}</p>
+                  <h2 className="font-semibold text-brand-900">{customer.name}</h2>
+                  <p className="mt-1 text-sm text-brand-800/60">{customer.email}</p>
                   {customer.phone && (
-                    <p className="text-sm text-slate-500">{customer.phone}</p>
+                    <p className="text-sm text-brand-800/60">{customer.phone}</p>
                   )}
                 </div>
-                <div className="rounded-lg bg-slate-100 px-3 py-2 text-center">
-                  <p className="text-lg font-bold text-slate-900">
+                <div className="rounded-lg bg-brand-100 px-3 py-2 text-center">
+                  <p className="text-lg font-bold text-brand-900">
                     {customer.totalBookings}
                   </p>
-                  <p className="text-xs text-slate-500">bookings</p>
+                  <p className="text-xs text-brand-800/55">bookings</p>
                 </div>
               </div>
-              <div className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-500">
+              <div className="mt-5 border-t border-brand-100 pt-4 text-sm text-brand-800/60">
                 Last booking:{' '}
-                <span className="font-medium text-slate-700">
+                <span className="font-medium text-brand-800">
                   {customer.lastBookingDate
                     ? format(new Date(customer.lastBookingDate), 'dd MMM yyyy')
                     : 'Not recorded'}
