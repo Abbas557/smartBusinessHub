@@ -12,6 +12,14 @@ export const useBookings = (enabled = true) => {
   });
 };
 
+export const useMyCustomerBookings = (enabled = true) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.bookings.mine(),
+    queryFn: bookingApi.listMine,
+    enabled,
+  });
+};
+
 export const useBookingSlots = (
   businessId: string | undefined,
   serviceId: string | undefined,
@@ -40,6 +48,21 @@ export const useCreateBooking = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEYS.bookings.all() });
       qc.invalidateQueries({ queryKey: QUERY_KEYS.customers.all() });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Booking failed');
+    },
+  });
+};
+
+export const useCreateCustomerBooking = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateBookingPayload) =>
+      bookingApi.createForCustomer(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.bookings.mine() });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.bookings.all() });
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || 'Booking failed');

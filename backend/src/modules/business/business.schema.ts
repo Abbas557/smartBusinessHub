@@ -108,6 +108,30 @@ export class Business {
   @Prop({ trim: true })
   city: string;
 
+  @Prop({ trim: true, index: true })
+  area: string;
+
+  @Prop({ trim: true, index: true })
+  pincode: string;
+
+  @Prop({
+    type: {
+      type: String,
+      enum: ['Point'],
+    },
+    coordinates: {
+      type: [Number],
+      default: undefined,
+    },
+  })
+  location: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+
+  @Prop({ default: 10, min: 1, max: 100 })
+  serviceRadiusKm: number;
+
   @Prop({ default: null })
   logoUrl: string;   // AWS S3 / CloudFront URL
 
@@ -133,3 +157,5 @@ export const BusinessSchema = SchemaFactory.createForClass(Business);
 
 // Compound index: fast lookup of a user's business
 BusinessSchema.index({ ownerId: 1, slug: 1 });
+BusinessSchema.index({ city: 1, area: 1, category: 1, isPublished: 1 });
+BusinessSchema.index({ location: '2dsphere' });

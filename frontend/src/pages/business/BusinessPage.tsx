@@ -51,6 +51,8 @@ const profileSchema = z.object({
   phone:       z.string().optional(),
   address:     z.string().optional(),
   city:        z.string().optional(),
+  area:        z.string().optional(),
+  pincode:     z.string().optional(),
 });
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
@@ -73,6 +75,8 @@ const ProfileTab: React.FC = () => {
         phone:       business?.phone || '',
         address:     business?.address || '',
         city:        business?.city || '',
+        area:        business?.area || '',
+        pincode:     business?.pincode || '',
       },
     });
 
@@ -162,11 +166,23 @@ const ProfileTab: React.FC = () => {
             placeholder="123 MG Road"
             {...register('address')}
           />
-          <Input
-            label="City"
-            placeholder="Lucknow"
-            {...register('city')}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Input
+              label="City"
+              placeholder="Lucknow"
+              {...register('city')}
+            />
+            <Input
+              label="Area"
+              placeholder="Gomti Nagar"
+              {...register('area')}
+            />
+            <Input
+              label="Pincode"
+              placeholder="226010"
+              {...register('pincode')}
+            />
+          </div>
 
           <div className="flex justify-end pt-2">
             <Button type="submit" isLoading={isSubmitting}>

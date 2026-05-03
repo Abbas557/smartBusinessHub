@@ -7,6 +7,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { UsersModule } from '../users/users.module';
+import { BusinessModule } from '../business/business.module';
+import { CustomerProfilesModule } from '../customer-profiles/customer-profiles.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { UsersModule } from '../users/users.module';
     // provides its own secret, giving us dual-secret access/refresh tokens
     JwtModule.register({}),
     UsersModule, // Provides UserDao
+    BusinessModule,
+    CustomerProfilesModule,
   ],
   controllers: [AuthController],
   providers: [

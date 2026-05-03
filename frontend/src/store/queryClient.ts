@@ -31,6 +31,7 @@ export const QUERY_KEYS = {
   },
   bookings: {
     all: () => ['bookings'] as const,
+    mine: () => ['bookings', 'mine'] as const,
     slots: (businessId: string, serviceId: string, date: string) =>
       ['bookings', 'slots', businessId, serviceId, date] as const,
   },

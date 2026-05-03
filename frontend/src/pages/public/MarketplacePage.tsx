@@ -1,15 +1,18 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   Building2,
   CalendarDays,
+  Gem,
   MapPin,
   Search,
   SlidersHorizontal,
   Star,
 } from 'lucide-react';
 import { usePublicBusinesses } from '../../hooks/useBusiness';
+import { useAuth } from '../../context/AuthContext';
+import { useCustomerProfile } from '../../hooks/useCustomerProfile';
 import { BusinessCategory } from '../../types';
 import { Badge, Button, Card, Input, Select, Spinner } from '../../components/ui';
 
@@ -25,49 +28,81 @@ const categories: Array<{ value: BusinessCategory | 'all'; label: string }> = [
 ];
 
 const MarketplacePage: React.FC = () => {
+  const { isAuthenticated, user } = useAuth();
+  const isCustomer = isAuthenticated && user?.role === 'CUSTOMER';
+  const { data: profile } = useCustomerProfile(isCustomer);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<BusinessCategory | 'all'>('all');
   const [city, setCity] = useState('');
+  const [area, setArea] = useState('');
+
+  useEffect(() => {
+    if (!isCustomer || !profile) return;
+    setCity((value) => value || profile.city || '');
+    setArea((value) => value || profile.area || '');
+  }, [isCustomer, profile]);
 
   const params = useMemo(
     () => ({
       search: search.trim() || undefined,
       category,
       city: city.trim() || undefined,
+      area: area.trim() || undefined,
     }),
-    [category, city, search],
+    [area, category, city, search],
   );
 
   const { data: businesses = [], isLoading } = usePublicBusinesses(params);
 
   return (
-    <div className="min-h-screen app-surface">
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-          <Link to="/marketplace" className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white">
-              <Building2 className="h-4 w-4" />
-            </span>
-            Smart Business Hub
-          </Link>
-          <Link to="/login">
-            <Button variant="secondary" size="sm">Owner login</Button>
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl space-y-8 px-5 py-8">
-        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <div className="dark-grid p-8 text-white lg:p-10">
-            <Badge variant="blue">Customer marketplace</Badge>
-            <h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight lg:text-5xl">
-              Discover nearby businesses and book the right service in minutes.
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 lg:px-6">
+      <section className="overflow-hidden rounded-lg border border-emerald-900/10 bg-white shadow-xl shadow-emerald-950/5">
+        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="relative overflow-hidden bg-slate-950 p-8 text-white lg:p-10">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(45,212,191,0.35),transparent_30%),linear-gradient(135deg,rgba(15,23,42,0.92),rgba(6,78,59,0.82))]" />
+            <div className="relative">
+              <Badge variant="blue">Customer marketplace</Badge>
+              <h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight lg:text-5xl">
+                Find the right local service without the back-and-forth.
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-200">
-              Browse published vendors, compare services, check prices, and reserve a time without calling around.
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-200">
+                Compare trusted vendors near you, choose a service, reserve a slot, and pay in one clean flow.
             </p>
+              <div className="mt-6 flex flex-wrap gap-2 text-xs text-slate-200">
+                {['Nearby vendors', 'Transparent prices', 'Instant booking'].map((item) => (
+                  <span key={item} className="rounded-full bg-white/10 px-3 py-1.5">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="grid gap-3 border-t border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,1fr)_180px_180px]">
+
+          <div className="flex flex-col justify-between bg-emerald-50 p-6">
+            <div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-700 text-white">
+                <Gem className="h-5 w-5" />
+              </div>
+              <h2 className="mt-4 text-lg font-semibold text-slate-950">
+                {isCustomer && profile?.area
+                  ? `Curated around ${profile.area}`
+                  : 'Curated for your area'}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Set or change your area below to tune the marketplace results.
+              </p>
+            </div>
+            {!isCustomer && (
+              <Link to="/customer/register" className="mt-5 block">
+                <Button className="w-full bg-emerald-700 hover:bg-emerald-800">
+                  Create customer account
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
+
+        <div className="grid gap-3 border-t border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,1fr)_170px_170px_170px]">
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -85,10 +120,16 @@ const MarketplacePage: React.FC = () => {
               placeholder="City"
               leftIcon={<MapPin className="h-4 w-4" />}
             />
-          </div>
-        </section>
+            <Input
+              value={area}
+              onChange={(event) => setArea(event.target.value)}
+              placeholder="Area"
+              leftIcon={<MapPin className="h-4 w-4" />}
+            />
+        </div>
+      </section>
 
-        <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-slate-900">Available vendors</h2>
             <p className="text-sm text-slate-500">{businesses.length} published profiles found</p>
@@ -97,9 +138,9 @@ const MarketplacePage: React.FC = () => {
             <SlidersHorizontal className="h-4 w-4" />
             Sorted by activity
           </div>
-        </div>
+      </div>
 
-        {isLoading ? (
+      {isLoading ? (
           <div className="flex h-48 items-center justify-center">
             <Spinner size="lg" />
           </div>
@@ -170,7 +211,7 @@ const MarketplacePage: React.FC = () => {
                       {business.city && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1">
                           <MapPin className="h-3.5 w-3.5" />
-                          {business.city}
+                          {[business.area, business.city].filter(Boolean).join(', ')}
                         </span>
                       )}
                       <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1">
@@ -194,9 +235,9 @@ const MarketplacePage: React.FC = () => {
               );
             })}
           </div>
-        )}
+      )}
 
-        <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-3">
           {[
             ['Browse', 'Search vendors by city, service, category, or price range.'],
             ['Compare', 'Open each profile to review services, hours, and business details.'],
@@ -211,8 +252,7 @@ const MarketplacePage: React.FC = () => {
               <ArrowRight className="mt-4 h-4 w-4 text-slate-400" />
             </Card>
           ))}
-        </section>
-      </main>
+      </section>
     </div>
   );
 };

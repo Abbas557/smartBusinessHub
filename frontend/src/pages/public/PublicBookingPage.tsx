@@ -1,12 +1,18 @@
-import React, { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle2, CreditCard, WalletCards } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCreateBooking, useBookingSlots } from '../../hooks/useBookings';
+import {
+  useBookingSlots,
+  useCreateBooking,
+  useCreateCustomerBooking,
+} from '../../hooks/useBookings';
 import { usePublicBusiness } from '../../hooks/useBusiness';
 import { useDemoCheckout } from '../../hooks/usePayments';
+import { useAuth } from '../../context/AuthContext';
+import { useCustomerProfile } from '../../hooks/useCustomerProfile';
 import { Button, Card, Input, Select, Spinner, Textarea } from '../../components/ui';
 import { Booking, PaymentMethod } from '../../types';
 
@@ -23,6 +29,10 @@ const dateToday = () => new Date().toISOString().slice(0, 10);
 
 const PublicBookingPage: React.FC = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+  const isCustomer = isAuthenticated && user?.role === 'CUSTOMER';
+  const { data: customerProfile } = useCustomerProfile(isCustomer);
   const { data: business, isLoading } = usePublicBusiness(slug);
   const [serviceId, setServiceId] = useState('');
   const [date, setDate] = useState(dateToday());
@@ -31,6 +41,7 @@ const PublicBookingPage: React.FC = () => {
   const [confirmed, setConfirmed] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
   const createBooking = useCreateBooking();
+  const createCustomerBooking = useCreateCustomerBooking();
   const demoCheckout = useDemoCheckout();
 
   const selectedServiceId = serviceId || business?.services?.[0]?._id;
@@ -65,17 +76,30 @@ const PublicBookingPage: React.FC = () => {
     },
   });
 
+  useEffect(() => {
+    if (!isCustomer || !user) return;
+    reset({
+      customerName: user.name || '',
+      customerEmail: user.email || '',
+      customerPhone: customerProfile?.phone || user.phone || '',
+      notes: '',
+    });
+  }, [customerProfile, isCustomer, reset, user]);
+
   const onSubmit = async (values: BookingFormValues) => {
     if (!business || !selectedServiceId || !selectedSlot) return;
 
-    const booking = await createBooking.mutateAsync({
+    const payload = {
       businessId: business._id,
       serviceId: selectedServiceId,
       date,
       startTime: selectedSlot,
       paymentMethod,
       ...values,
-    });
+    };
+    const booking = await (isCustomer
+      ? createCustomerBooking.mutateAsync(payload)
+      : createBooking.mutateAsync(payload));
 
     if (paymentMethod === 'demo_card') {
       await demoCheckout.mutateAsync({
@@ -141,7 +165,14 @@ const PublicBookingPage: React.FC = () => {
             </div>
           )}
           <div className="mt-6 flex justify-center gap-3">
-            <Button onClick={() => setConfirmed(false)}>Book another</Button>
+            {isCustomer && (
+              <Button onClick={() => navigate('/customer/bookings')}>
+                My bookings
+              </Button>
+            )}
+            <Button onClick={() => setConfirmed(false)} variant={isCustomer ? 'secondary' : 'primary'}>
+              Book another
+            </Button>
             <Link to={`/b/${business.slug}`}>
               <Button variant="secondary">View profile</Button>
             </Link>
@@ -277,7 +308,11 @@ const PublicBookingPage: React.FC = () => {
               size="lg"
               className="w-full"
               disabled={!selectedSlot}
-              isLoading={createBooking.isPending || demoCheckout.isPending}
+              isLoading={
+                createBooking.isPending ||
+                createCustomerBooking.isPending ||
+                demoCheckout.isPending
+              }
             >
               {paymentMethod === 'demo_card' ? 'Book and pay demo' : 'Request booking'}
             </Button>

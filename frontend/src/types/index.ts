@@ -6,6 +6,7 @@ export interface User {
   _id: string;
   name: string;
   email: string;
+  phone?: string | null;
   role: Role;
   avatarUrl: string | null;
   isActive: boolean;
@@ -51,6 +52,11 @@ export interface BusinessHours {
   sunday: DayHours;
 }
 
+export interface GeoPoint {
+  type: 'Point';
+  coordinates: [number, number];
+}
+
 export interface Business {
   _id: string;
   ownerId: string;
@@ -61,6 +67,10 @@ export interface Business {
   phone?: string;
   address?: string;
   city?: string;
+  area?: string;
+  pincode?: string;
+  location?: GeoPoint;
+  serviceRadiusKm?: number;
   logoUrl: string | null;
   bannerUrl: string | null;
   services: Service[];
@@ -81,6 +91,7 @@ export interface Booking {
   _id: string;
   businessId: string;
   customerId: string;
+  customerUserId?: string | null;
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
@@ -114,6 +125,25 @@ export interface Customer {
   totalBookings: number;
   lastBookingDate: string | null;
   tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomerProfile {
+  _id: string;
+  userId: string;
+  phone?: string;
+  city?: string;
+  area?: string;
+  pincode?: string;
+  location?: GeoPoint;
+  savedAddresses: Array<{
+    label?: string;
+    address?: string;
+    city?: string;
+    area?: string;
+    pincode?: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 }

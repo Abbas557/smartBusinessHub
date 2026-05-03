@@ -36,11 +36,12 @@ export class BusinessService {
     }
 
     const slug = await this.generateUniqueSlug(dto.name);
+    const data = this.prepareBusinessPayload(dto);
 
     return this.businessDao.create({
       ownerId: new Types.ObjectId(ownerId) as any,
       slug,
-      ...dto,
+      ...data,
     });
   }
 
@@ -65,7 +66,10 @@ export class BusinessService {
     const business = await this.businessDao.findByOwnerId(ownerId);
     if (!business) throw new NotFoundException('Business not found');
 
-    const updated = await this.businessDao.updateByOwnerId(ownerId, dto);
+    const updated = await this.businessDao.updateByOwnerId(
+      ownerId,
+      this.prepareBusinessPayload(dto),
+    );
     return updated;
   }
 
@@ -83,6 +87,8 @@ export class BusinessService {
     search?: string;
     category?: string;
     city?: string;
+    area?: string;
+    pincode?: string;
   }): Promise<BusinessDocument[]> {
     const filter: Record<string, any> = {};
 
@@ -92,6 +98,14 @@ export class BusinessService {
 
     if (query.city) {
       filter.city = { $regex: query.city, $options: 'i' };
+    }
+
+    if (query.area) {
+      filter.area = { $regex: query.area, $options: 'i' };
+    }
+
+    if (query.pincode) {
+      filter.pincode = query.pincode;
     }
 
     if (query.search) {
@@ -212,5 +226,20 @@ export class BusinessService {
     }
 
     return slug;
+  }
+
+  private prepareBusinessPayload<
+    T extends CreateBusinessDto | UpdateBusinessDto,
+  >(dto: T) {
+    const { location, ...rest } = dto;
+    if (!location) return rest;
+
+    return {
+      ...rest,
+      location: {
+        type: 'Point',
+        coordinates: [location.lng, location.lat],
+      },
+    };
   }
 }

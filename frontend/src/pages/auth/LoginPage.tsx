@@ -31,8 +31,14 @@ const LoginPage: React.FC = () => {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await login(values);
-      navigate(from, { replace: true });
+      const user = await login(values);
+      const destination =
+        from !== '/dashboard'
+          ? from
+          : user.role === 'CUSTOMER'
+            ? '/marketplace'
+            : '/dashboard';
+      navigate(destination, { replace: true });
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Login failed. Try again.';
       toast.error(Array.isArray(msg) ? msg[0] : msg);
@@ -47,7 +53,7 @@ const LoginPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-white">
             Smart Business Hub
           </h1>
-          <p className="mt-2 text-sm text-slate-400">Sign in to your owner workspace</p>
+          <p className="mt-2 text-sm text-slate-400">Sign in to your workspace</p>
         </div>
 
         {/* Card */}
@@ -106,8 +112,8 @@ const LoginPage: React.FC = () => {
 
           <p className="text-center text-sm text-gray-500 mt-6">
             Don't have an account?{' '}
-              <Link to="/register" className="font-medium text-slate-900 hover:underline">
-                Create one
+            <Link to="/register" className="font-medium text-slate-900 hover:underline">
+              Create one
             </Link>
           </p>
         </div>

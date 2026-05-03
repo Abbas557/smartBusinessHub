@@ -13,6 +13,8 @@ import {
   ValidateNested,
   IsObject,
   Matches,
+  IsLatitude,
+  IsLongitude,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BusinessCategory } from '../business.schema';
@@ -92,6 +94,14 @@ export class BusinessHoursDto {
   @IsOptional() @ValidateNested() @Type(() => DayHoursDto) sunday?: DayHoursDto;
 }
 
+export class LocationDto {
+  @IsLongitude()
+  lng: number;
+
+  @IsLatitude()
+  lat: number;
+}
+
 // ─── Business DTOs ────────────────────────────────────────────────────────────
 
 export class CreateBusinessDto {
@@ -120,6 +130,27 @@ export class CreateBusinessDto {
   @IsOptional()
   @IsString()
   city?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  area?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  pincode?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => LocationDto)
+  location?: LocationDto;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  serviceRadiusKm?: number;
 }
 
 export class UpdateBusinessDto {
@@ -149,6 +180,27 @@ export class UpdateBusinessDto {
   @IsOptional()
   @IsString()
   city?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  area?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  pincode?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => LocationDto)
+  location?: LocationDto;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  serviceRadiusKm?: number;
 
   @IsOptional()
   @IsString()

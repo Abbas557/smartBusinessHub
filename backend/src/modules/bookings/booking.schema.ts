@@ -43,6 +43,9 @@ export class Booking {
   @Prop({ type: Types.ObjectId, ref: 'Customer', default: null, index: true })
   customerId: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null, index: true })
+  customerUserId: Types.ObjectId;
+
   @Prop({ required: true, trim: true, maxlength: 100 })
   customerName: string;
 
@@ -106,3 +109,4 @@ export const BookingSchema = SchemaFactory.createForClass(Booking);
 
 BookingSchema.index({ businessId: 1, date: 1, startTime: 1 });
 BookingSchema.index({ businessId: 1, status: 1, date: 1 });
+BookingSchema.index({ customerUserId: 1, date: -1 });

@@ -12,8 +12,16 @@ export class PublicBusinessController {
     @Query('search') search?: string,
     @Query('category') category?: string,
     @Query('city') city?: string,
+    @Query('area') area?: string,
+    @Query('pincode') pincode?: string,
   ) {
-    return this.businessService.listPublicProfiles({ search, category, city });
+    return this.businessService.listPublicProfiles({
+      search,
+      category,
+      city,
+      area,
+      pincode,
+    });
   }
 
   @Get(':slug')

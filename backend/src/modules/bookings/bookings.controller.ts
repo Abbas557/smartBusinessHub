@@ -35,6 +35,16 @@ export class BookingsController {
     return this.bookingsService.createPublicBooking(dto);
   }
 
+  @Post('customer')
+  @Roles(Role.CUSTOMER)
+  @HttpCode(HttpStatus.CREATED)
+  createForCustomer(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateBookingDto,
+  ) {
+    return this.bookingsService.createCustomerBooking(user.sub, dto);
+  }
+
   @Public()
   @Get('slots')
   getSlots(@Query() query: SlotQueryDto) {
@@ -45,6 +55,12 @@ export class BookingsController {
   @Roles(Role.BUSINESS_OWNER)
   findAll(@CurrentUser() user: JwtPayload) {
     return this.bookingsService.findForOwner(user.sub);
+  }
+
+  @Get('customer/me')
+  @Roles(Role.CUSTOMER)
+  findMine(@CurrentUser() user: JwtPayload) {
+    return this.bookingsService.findForCustomer(user.sub);
   }
 
   @Get(':id')
