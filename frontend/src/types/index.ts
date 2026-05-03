@@ -77,6 +77,8 @@ export interface Business {
   hours: BusinessHours;
   isPublished: boolean;
   totalBookings: number;
+  averageRating?: number;
+  reviewCount?: number;
   distanceKm?: number;
   distanceMeters?: number;
   createdAt: string;
@@ -167,6 +169,19 @@ export interface Payment {
   status: PaymentStatus;
   method: PaymentMethod;
   reference: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Review {
+  _id: string;
+  businessId: string;
+  customerUserId: string;
+  bookingId: string;
+  customerName: string;
+  rating: number;
+  comment?: string;
+  status: 'published' | 'hidden';
   createdAt: string;
   updatedAt: string;
 }

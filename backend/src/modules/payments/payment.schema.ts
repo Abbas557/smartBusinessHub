@@ -46,6 +46,12 @@ export class Payment {
   @Prop({ required: true, trim: true })
   reference: string;
 
+  @Prop({ default: null, trim: true })
+  providerPaymentId: string;
+
+  @Prop({ default: null, trim: true })
+  providerSignature: string;
+
   id: string;
 }
 

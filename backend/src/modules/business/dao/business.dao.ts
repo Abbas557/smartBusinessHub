@@ -209,6 +209,15 @@ export class BusinessDao {
     });
   }
 
+  async updateRatingSummary(
+    businessId: string,
+    summary: { averageRating: number; reviewCount: number },
+  ): Promise<void> {
+    await this.businessModel.findByIdAndUpdate(businessId, {
+      $set: summary,
+    });
+  }
+
   async deleteByOwnerId(ownerId: string): Promise<void> {
     const ownerFilter = Types.ObjectId.isValid(ownerId)
       ? { $in: [new Types.ObjectId(ownerId), ownerId] }

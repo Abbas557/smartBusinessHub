@@ -206,6 +206,13 @@ export class BusinessService {
     await this.businessDao.incrementBookingCount(businessId);
   }
 
+  async updateRatingSummary(
+    businessId: string,
+    summary: { averageRating: number; reviewCount: number },
+  ): Promise<void> {
+    await this.businessDao.updateRatingSummary(businessId, summary);
+  }
+
   // ─── HOURS ─────────────────────────────────────────────────────────────────
 
   async updateHours(

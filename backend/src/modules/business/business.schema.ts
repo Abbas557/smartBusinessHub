@@ -150,6 +150,12 @@ export class Business {
   @Prop({ default: 0 })
   totalBookings: number;
 
+  @Prop({ default: 0, min: 0, max: 5 })
+  averageRating: number;
+
+  @Prop({ default: 0, min: 0 })
+  reviewCount: number;
+
   id: string;
 }
 

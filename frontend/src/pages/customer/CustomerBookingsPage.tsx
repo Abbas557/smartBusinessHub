@@ -5,8 +5,10 @@ import {
   CheckCircle2,
   Clock3,
   CreditCard,
+  MessageSquare,
   Search,
   Sparkles,
+  Star,
   XCircle,
 } from 'lucide-react';
 import {
@@ -17,6 +19,7 @@ import {
 } from '../../hooks/useBookings';
 import { Badge, Button, Card, Input, Spinner } from '../../components/ui';
 import { Booking, BookingStatus, PaymentStatus } from '../../types';
+import { useCreateReview, useMyReviews } from '../../hooks/useReviews';
 
 const currency = new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -46,13 +49,21 @@ const statusIcon = (status: BookingStatus) => {
 
 const dateToday = () => new Date().toISOString().slice(0, 10);
 
-const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
+const BookingCard: React.FC<{
+  booking: Booking;
+  hasReview: boolean;
+}> = ({ booking, hasReview }) => {
   const [isRescheduling, setIsRescheduling] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
   const [newDate, setNewDate] = useState(dateToday());
   const [newSlot, setNewSlot] = useState('');
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
   const cancelBooking = useCancelCustomerBooking();
   const rescheduleBooking = useRescheduleCustomerBooking();
+  const createReview = useCreateReview();
   const canChange = booking.status !== 'cancelled' && booking.status !== 'completed';
+  const canReview = booking.status === 'completed' && !hasReview;
   const { data: slots = [], isFetching: slotsLoading } = useBookingSlots(
     booking.businessId,
     booking.serviceId,
@@ -239,6 +250,86 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
               </div>
             </div>
           )}
+
+          {booking.status === 'completed' && hasReview && (
+            <p className="mt-5 inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
+              <Star className="h-4 w-4 fill-current" />
+              Review submitted
+            </p>
+          )}
+
+          {canReview && (
+            <div className="mt-5">
+              <Button
+                size="sm"
+                variant="secondary"
+                leftIcon={<MessageSquare className="h-4 w-4" />}
+                onClick={() => setIsReviewing((value) => !value)}
+              >
+                Leave review
+              </Button>
+            </div>
+          )}
+
+          {isReviewing && canReview && (
+            <div className="mt-4 rounded-lg border border-amber-100 bg-amber-50 p-4">
+              <p className="text-sm font-semibold text-slate-900">
+                Rate this completed service
+              </p>
+              <div className="mt-3 flex gap-1">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setRating(value)}
+                    className="rounded-md p-1 text-amber-500"
+                    aria-label={`${value} star rating`}
+                  >
+                    <Star
+                      className={`h-6 w-6 ${
+                        value <= rating ? 'fill-current' : ''
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={comment}
+                onChange={(event) => setComment(event.target.value)}
+                rows={3}
+                maxLength={700}
+                placeholder="Share what went well for future customers"
+                className="mt-3 w-full resize-none rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+              />
+              <div className="mt-3 flex justify-end gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setIsReviewing(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  size="sm"
+                  isLoading={createReview.isPending}
+                  onClick={() =>
+                    createReview.mutate(
+                      {
+                        bookingId: booking._id,
+                        rating,
+                        comment: comment.trim() || undefined,
+                      },
+                      {
+                        onSuccess: () => setIsReviewing(false),
+                      },
+                    )
+                  }
+                >
+                  Publish review
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Card>
@@ -247,8 +338,10 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
 
 const CustomerBookingsPage: React.FC = () => {
   const { data: bookings = [], isLoading } = useMyCustomerBookings();
+  const { data: reviews = [] } = useMyReviews();
   const upcoming = bookings.filter((booking) => booking.status !== 'cancelled');
   const paidCount = bookings.filter((booking) => booking.paymentStatus === 'paid').length;
+  const reviewedBookingIds = new Set(reviews.map((review) => review.bookingId));
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 lg:px-6">
@@ -304,7 +397,11 @@ const CustomerBookingsPage: React.FC = () => {
       ) : (
         <div className="space-y-4">
           {bookings.map((booking) => (
-            <BookingCard key={booking._id} booking={booking} />
+            <BookingCard
+              key={booking._id}
+              booking={booking}
+              hasReview={reviewedBookingIds.has(booking._id)}
+            />
           ))}
         </div>
       )}

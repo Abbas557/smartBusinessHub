@@ -13,11 +13,13 @@ import {
   Star,
 } from 'lucide-react';
 import { usePublicBusiness } from '../../hooks/useBusiness';
+import { useBusinessReviews } from '../../hooks/useReviews';
 import { Badge, Button, Card, Spinner } from '../../components/ui';
 
 const PublicBusinessPage: React.FC = () => {
   const { slug } = useParams();
   const { data: business, isLoading, isError } = usePublicBusiness(slug);
+  const { data: reviews = [] } = useBusinessReviews(business?._id);
 
   if (isLoading) {
     return (
@@ -45,6 +47,8 @@ const PublicBusinessPage: React.FC = () => {
   );
   const activeServices = business.services.filter((service) => service.isActive);
   const startingPrice = Math.min(...activeServices.map((service) => service.price));
+  const rating = business.averageRating || 0;
+  const reviewCount = business.reviewCount || 0;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -135,8 +139,12 @@ const PublicBusinessPage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-lg bg-white/95 p-4 text-slate-950">
                       <Star className="h-5 w-5 text-amber-500" />
-                      <p className="mt-3 text-2xl font-bold">4.8</p>
-                      <p className="text-xs text-slate-500">Trust score</p>
+                      <p className="mt-3 text-2xl font-bold">
+                        {rating ? rating.toFixed(1) : 'New'}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {reviewCount ? `${reviewCount} reviews` : 'Awaiting reviews'}
+                      </p>
                     </div>
                     <div className="rounded-lg bg-white/95 p-4 text-slate-950">
                       <CreditCard className="h-5 w-5 text-emerald-700" />
@@ -174,6 +182,74 @@ const PublicBusinessPage: React.FC = () => {
               <p className="mt-2 text-sm leading-6 text-slate-500">{copy}</p>
             </Card>
           ))}
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+          <Card className="h-fit bg-slate-950 text-white">
+            <Star className="h-6 w-6 fill-current text-amber-400" />
+            <p className="mt-4 text-4xl font-bold">
+              {rating ? rating.toFixed(1) : 'New'}
+            </p>
+            <p className="mt-1 text-sm text-slate-300">
+              {reviewCount
+                ? `Based on ${reviewCount} customer review${reviewCount === 1 ? '' : 's'}`
+                : 'Customer reviews will appear here after completed bookings.'}
+            </p>
+          </Card>
+
+          <Card>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-950">
+                  Customer reviews
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Feedback from completed appointments.
+                </p>
+              </div>
+              <Badge variant={reviewCount ? 'green' : 'gray'}>
+                {reviewCount} total
+              </Badge>
+            </div>
+
+            {reviews.length === 0 ? (
+              <p className="mt-5 rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
+                No published reviews yet.
+              </p>
+            ) : (
+              <div className="mt-5 grid gap-3">
+                {reviews.slice(0, 3).map((review) => (
+                  <div
+                    key={review._id}
+                    className="rounded-lg border border-slate-200 bg-white p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-slate-950">
+                          {review.customerName}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(review.createdAt).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                          })}
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                        <Star className="h-3.5 w-3.5 fill-current" />
+                        {review.rating}
+                      </span>
+                    </div>
+                    {review.comment && (
+                      <p className="mt-3 text-sm leading-6 text-slate-600">
+                        {review.comment}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </section>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">

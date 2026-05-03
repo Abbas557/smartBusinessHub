@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BookingsModule } from '../bookings/bookings.module';
 import { Payment, PaymentSchema } from './payment.schema';
@@ -7,6 +8,7 @@ import { PaymentsService } from './payments.service';
 
 @Module({
   imports: [
+    ConfigModule,
     MongooseModule.forFeature([{ name: Payment.name, schema: PaymentSchema }]),
     BookingsModule,
   ],

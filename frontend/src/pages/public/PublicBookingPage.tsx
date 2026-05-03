@@ -10,11 +10,21 @@ import {
   useCreateCustomerBooking,
 } from '../../hooks/useBookings';
 import { usePublicBusiness } from '../../hooks/useBusiness';
-import { useDemoCheckout } from '../../hooks/usePayments';
+import {
+  useCreateRazorpayOrder,
+  useDemoCheckout,
+  useVerifyRazorpayPayment,
+} from '../../hooks/usePayments';
 import { useAuth } from '../../context/AuthContext';
 import { useCustomerProfile } from '../../hooks/useCustomerProfile';
 import { Button, Card, Input, Select, Spinner, Textarea } from '../../components/ui';
 import { Booking, PaymentMethod } from '../../types';
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, any>) => { open: () => void };
+  }
+}
 
 const bookingSchema = z.object({
   customerName: z.string().min(2, 'Name is required'),
@@ -44,6 +54,8 @@ const PublicBookingPage: React.FC = () => {
   const createBooking = useCreateBooking();
   const createCustomerBooking = useCreateCustomerBooking();
   const demoCheckout = useDemoCheckout();
+  const createRazorpayOrder = useCreateRazorpayOrder();
+  const verifyRazorpayPayment = useVerifyRazorpayPayment();
 
   const selectedServiceId = serviceId || business?.services?.[0]?._id;
   const { data: slots = [], isFetching: slotsLoading } = useBookingSlots(
@@ -112,12 +124,88 @@ const PublicBookingPage: React.FC = () => {
         paymentStatus: 'paid',
         paymentMethod: 'demo_card',
       });
+    } else if (paymentMethod === 'card') {
+      await startRazorpayCheckout(booking, values);
+      setConfirmedBooking({
+        ...booking,
+        paymentStatus: 'paid',
+        paymentMethod: 'card',
+      });
     } else {
       setConfirmedBooking(booking);
     }
 
     setConfirmed(true);
     reset();
+  };
+
+  const loadRazorpayScript = () =>
+    new Promise<boolean>((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
+  const startRazorpayCheckout = async (
+    booking: Booking,
+    values: BookingFormValues,
+  ) => {
+    const loaded = await loadRazorpayScript();
+    if (!loaded || !window.Razorpay) {
+      throw new Error('Unable to load Razorpay Checkout');
+    }
+
+    const order = await createRazorpayOrder.mutateAsync({
+      bookingId: booking._id,
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      const checkout = new window.Razorpay!({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'Smart Business Hub',
+        description: booking.serviceName,
+        order_id: order.orderId,
+        prefill: {
+          name: values.customerName,
+          email: values.customerEmail,
+          contact: values.customerPhone,
+        },
+        notes: {
+          bookingId: booking._id,
+          businessId: booking.businessId,
+        },
+        handler: async (response: {
+          razorpay_order_id: string;
+          razorpay_payment_id: string;
+          razorpay_signature: string;
+        }) => {
+          try {
+            await verifyRazorpayPayment.mutateAsync({
+              bookingId: booking._id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        },
+        modal: {
+          ondismiss: () => reject(new Error('Payment cancelled')),
+        },
+      });
+
+      checkout.open();
+    });
   };
 
   if (isLoading) {
@@ -223,7 +311,7 @@ const PublicBookingPage: React.FC = () => {
             </div>
 
             {selectedService && (
-              <div className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-[1fr_1fr]">
+              <div className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 lg:grid-cols-3">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('pay_later')}
@@ -252,6 +340,21 @@ const PublicBookingPage: React.FC = () => {
                   <span>
                     <span className="block text-sm font-semibold">Demo online payment</span>
                     <span className="mt-1 block text-xs opacity-80">Mark ₹{selectedService.price} as paid.</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('card')}
+                  className={`flex items-start gap-3 rounded-lg border p-4 text-left transition-colors ${
+                    paymentMethod === 'card'
+                      ? 'border-sky-700 bg-sky-700 text-white'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-white'
+                  }`}
+                >
+                  <CreditCard className="mt-0.5 h-5 w-5" />
+                  <span>
+                    <span className="block text-sm font-semibold">Razorpay checkout</span>
+                    <span className="mt-1 block text-xs opacity-80">Pay securely with UPI, card, or net banking.</span>
                   </span>
                 </button>
               </div>
@@ -312,10 +415,16 @@ const PublicBookingPage: React.FC = () => {
               isLoading={
                 createBooking.isPending ||
                 createCustomerBooking.isPending ||
-                demoCheckout.isPending
+                demoCheckout.isPending ||
+                createRazorpayOrder.isPending ||
+                verifyRazorpayPayment.isPending
               }
             >
-              {paymentMethod === 'demo_card' ? 'Book and pay demo' : 'Request booking'}
+              {paymentMethod === 'demo_card'
+                ? 'Book and pay demo'
+                : paymentMethod === 'card'
+                  ? 'Book and pay with Razorpay'
+                  : 'Request booking'}
             </Button>
           </form>
         </Card>

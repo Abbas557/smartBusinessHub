@@ -38,4 +38,8 @@ export const QUERY_KEYS = {
   customers: {
     all: () => ['customers'] as const,
   },
+  reviews: {
+    mine: () => ['reviews', 'mine'] as const,
+    business: (businessId: string) => ['reviews', 'business', businessId] as const,
+  },
 };

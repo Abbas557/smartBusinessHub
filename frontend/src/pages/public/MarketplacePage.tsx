@@ -250,8 +250,10 @@ const MarketplacePage: React.FC = () => {
                         </span>
                       )}
                       <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1">
-                        <Star className="h-3.5 w-3.5" />
-                        Popular
+                        <Star className="h-3.5 w-3.5 text-amber-500" />
+                        {business.reviewCount
+                          ? `${business.averageRating?.toFixed(1)} (${business.reviewCount})`
+                          : 'New'}
                       </span>
                     </div>
 
