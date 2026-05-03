@@ -48,7 +48,7 @@ export const RoleGuard: React.FC<{ allowedRoles: Role[] }> = ({
 // Redirects logged-in users away from /login and /register to /dashboard
 
 export const GuestRoute: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -59,7 +59,12 @@ export const GuestRoute: React.FC = () => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return (
+      <Navigate
+        to={user?.role === 'CUSTOMER' ? '/marketplace' : '/dashboard'}
+        replace
+      />
+    );
   }
 
   return <Outlet />;

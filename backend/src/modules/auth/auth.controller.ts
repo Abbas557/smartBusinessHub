@@ -11,7 +11,12 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
+import {
+  RegisterDto,
+  LoginDto,
+  RegisterCustomerDto,
+  RegisterOwnerDto,
+} from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
@@ -38,6 +43,42 @@ export class AuthController {
     this.setRefreshCookie(res, result.refreshToken);
     return {
       message: 'Account created successfully',
+      data: {
+        user: result.user,
+        accessToken: result.accessToken,
+      },
+    };
+  }
+
+  @Public()
+  @Post('register-owner')
+  @HttpCode(HttpStatus.CREATED)
+  async registerOwner(
+    @Body() dto: RegisterOwnerDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.registerOwner(dto);
+    this.setRefreshCookie(res, result.refreshToken);
+    return {
+      message: 'Business owner account created successfully',
+      data: {
+        user: result.user,
+        accessToken: result.accessToken,
+      },
+    };
+  }
+
+  @Public()
+  @Post('register-customer')
+  @HttpCode(HttpStatus.CREATED)
+  async registerCustomer(
+    @Body() dto: RegisterCustomerDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.registerCustomer(dto);
+    this.setRefreshCookie(res, result.refreshToken);
+    return {
+      message: 'Customer account created successfully',
       data: {
         user: result.user,
         accessToken: result.accessToken,

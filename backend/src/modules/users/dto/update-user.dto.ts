@@ -1,19 +1,21 @@
 import {
-  IsEmail,
-  IsEnum,
   IsOptional,
   IsString,
   IsUrl,
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Role } from '../user.schema';
 
 export class UpdateUserDto {
   @IsOptional()
   @IsString()
   @MaxLength(100)
   name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  phone?: string;
 
   @IsOptional()
   @IsUrl()

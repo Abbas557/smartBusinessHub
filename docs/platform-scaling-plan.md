@@ -539,6 +539,617 @@ Recommended booking-payment behavior:
 - Owner sees revenue in dashboard.
 - Customer sees paid booking in customer account.
 
+## Database Architecture
+
+The database must be understandable, scalable, and easy to operate. Collections should be separated by business concept, not by screen.
+
+The current MongoDB approach is acceptable for the next stage because the product is document-heavy:
+
+- Business profiles are document-like.
+- Services can be embedded under businesses initially.
+- Booking records are naturally event documents.
+- Payments are transaction documents.
+- Customer profiles can evolve independently.
+
+MongoDB should remain the primary database until the product needs relational reporting, strict financial ledgers, or complex cross-entity joins.
+
+### Recommended MongoDB Collections
+
+Use clear collection names:
+
+```text
+users
+businesses
+services
+customer_profiles
+bookings
+payments
+reviews
+business_media
+notifications
+audit_logs
+marketplace_events
+```
+
+Some of these can be introduced gradually. The important rule is that each collection should have one obvious responsibility.
+
+### Collection Responsibilities
+
+#### users
+
+Stores authentication identity.
+
+Use for login credentials, role, account status, refresh token hash, and basic profile identity.
+
+Do not store full business profile data here.
+
+Recommended fields:
+
+```ts
+name
+email
+password
+role
+phone
+avatarUrl
+isActive
+refreshToken
+lastLoginAt
+```
+
+Indexes:
+
+```ts
+email unique
+role
+isActive
+```
+
+#### businesses
+
+Stores vendor profile and marketplace-facing business data.
+
+Recommended fields:
+
+```ts
+ownerId
+name
+slug
+description
+category
+phone
+address
+city
+area
+pincode
+location
+serviceRadiusKm
+logoUrl
+bannerUrl
+isPublished
+verificationStatus
+ratingAverage
+ratingCount
+totalBookings
+```
+
+Indexes:
+
+```ts
+ownerId
+slug unique
+isPublished
+category
+city
+area
+pincode
+location 2dsphere
+```
+
+#### services
+
+Services can stay embedded under `businesses` during the early stage, but they should eventually move into their own `services` collection.
+
+A separate services collection will scale better when search, analytics, service-specific availability, discounts, add-ons, staff assignment, and service-level media are added.
+
+Recommended fields:
+
+```ts
+businessId
+name
+description
+category
+durationMinutes
+price
+currency
+isActive
+images
+requiresDeposit
+depositAmount
+```
+
+Indexes:
+
+```ts
+businessId
+isActive
+category
+name text
+price
+```
+
+Migration path:
+
+1. Keep embedded services for now.
+2. Introduce `services` collection.
+3. Backfill services from businesses.
+4. Store service IDs and service snapshots in bookings.
+5. Use service snapshots in bookings so historical price or name changes do not alter old bookings.
+
+#### customer_profiles
+
+Stores customer-specific data separate from authentication.
+
+Recommended fields:
+
+```ts
+userId
+phone
+city
+area
+pincode
+location
+savedAddresses
+preferences
+```
+
+Indexes:
+
+```ts
+userId unique
+city
+area
+location 2dsphere
+```
+
+#### bookings
+
+Stores appointment records.
+
+Bookings should contain service snapshots. This is important because services can later change price, name, or duration. Old bookings must preserve what the customer actually booked.
+
+Recommended fields:
+
+```ts
+businessId
+customerProfileId
+customerUserId
+customerName
+customerEmail
+customerPhone
+serviceId
+serviceName
+servicePrice
+serviceDurationMinutes
+date
+startTime
+endTime
+status
+notes
+paymentStatus
+paymentId
+source
+cancelledAt
+completedAt
+```
+
+Indexes:
+
+```ts
+businessId date startTime
+businessId status date
+customerUserId date
+paymentStatus
+createdAt
+```
+
+Important modelling rule:
+
+`bookings` should not depend on live service price for historical revenue. Always store `servicePrice` on the booking.
+
+#### payments
+
+Stores payment records.
+
+Payments should be separated from bookings because one booking may later have failed attempts, successful payment, refund, partial payment, deposit, or remaining balance.
+
+Recommended fields:
+
+```ts
+bookingId
+businessId
+customerUserId
+amount
+currency
+provider
+providerOrderId
+providerPaymentId
+status
+method
+reference
+paidAt
+refundedAt
+rawProviderPayload
+```
+
+Indexes:
+
+```ts
+bookingId
+businessId status createdAt
+customerUserId createdAt
+providerOrderId
+providerPaymentId
+```
+
+Financial note:
+
+MongoDB is acceptable for early-stage payment records. If the product later handles wallet balances, payouts, commissions, invoices, taxes, or strict accounting, add PostgreSQL for ledger-style financial records.
+
+#### reviews
+
+Stores customer ratings and reviews.
+
+Recommended fields:
+
+```ts
+businessId
+bookingId
+customerUserId
+rating
+comment
+isPublished
+moderationStatus
+```
+
+Indexes:
+
+```ts
+businessId isPublished
+customerUserId
+rating
+```
+
+#### business_media
+
+Stores media metadata, not binary files. Files should remain in S3 or another object storage service.
+
+Recommended fields:
+
+```ts
+businessId
+type
+url
+storageKey
+caption
+sortOrder
+isActive
+```
+
+Indexes:
+
+```ts
+businessId type
+businessId sortOrder
+```
+
+#### notifications
+
+Stores email, SMS, WhatsApp, and in-app notification records.
+
+Recommended fields:
+
+```ts
+userId
+businessId
+bookingId
+channel
+recipient
+template
+status
+sentAt
+error
+```
+
+Indexes:
+
+```ts
+userId createdAt
+businessId createdAt
+status
+channel
+```
+
+#### audit_logs
+
+Stores important system actions.
+
+Use for business profile changes, service price changes, booking status changes, payment status changes, and admin actions.
+
+Recommended fields:
+
+```ts
+actorUserId
+actorRole
+entityType
+entityId
+action
+before
+after
+ipAddress
+userAgent
+createdAt
+```
+
+Indexes:
+
+```ts
+entityType entityId createdAt
+actorUserId createdAt
+createdAt
+```
+
+#### marketplace_events
+
+Stores analytics events for marketplace behavior.
+
+Use for business profile views, search events, booking intent clicks, checkout starts, and payment completions.
+
+Recommended fields:
+
+```ts
+customerUserId
+sessionId
+businessId
+serviceId
+eventType
+query
+city
+area
+location
+metadata
+createdAt
+```
+
+Indexes:
+
+```ts
+eventType createdAt
+businessId createdAt
+customerUserId createdAt
+city area
+```
+
+### MongoDB Modelling Guidelines
+
+Use embedded documents when:
+
+- The data is small.
+- It is always loaded with the parent.
+- It does not need independent permissions.
+- It rarely changes independently.
+
+Use separate collections when:
+
+- The data grows without bound.
+- It needs independent search or filters.
+- It needs its own lifecycle.
+- It is referenced by multiple features.
+- It needs analytics or reporting.
+
+Examples:
+
+- Business hours can stay embedded in `businesses`.
+- Services can start embedded, then move to `services`.
+- Bookings must be separate.
+- Payments must be separate.
+- Reviews must be separate.
+- Media should be separate if gallery support grows.
+
+### Suggested Database Ownership Boundaries
+
+Each backend module should own its collection.
+
+```text
+AuthModule -> users
+BusinessModule -> businesses
+ServicesModule -> services
+MarketplaceModule -> read models over businesses/services
+CustomerModule -> customer_profiles
+BookingsModule -> bookings
+PaymentsModule -> payments
+ReviewsModule -> reviews
+MediaModule -> business_media
+NotificationsModule -> notifications
+AuditModule -> audit_logs
+AnalyticsModule -> marketplace_events and aggregated reads
+```
+
+Avoid allowing every module to directly write every collection. Cross-module writes should go through service methods.
+
+### When To Add PostgreSQL
+
+MongoDB can handle the current product well. PostgreSQL should be considered when the product needs strong relational consistency or complex reporting.
+
+Good candidates for PostgreSQL:
+
+- Payment ledger
+- Vendor payouts
+- Platform commissions
+- Tax invoices
+- Subscription billing
+- Admin reporting
+- Strict accounting or audit tables
+
+Recommended hybrid architecture:
+
+```text
+MongoDB:
+- users
+- businesses
+- services
+- customer profiles
+- bookings
+- reviews
+- media
+- marketplace events
+
+PostgreSQL:
+- payment ledger
+- invoices
+- payouts
+- commissions
+- subscriptions
+```
+
+Do not add PostgreSQL immediately just because it might be useful later. Add it when a feature truly needs relational guarantees or accounting-style records.
+
+### When To Add Redis
+
+Redis is useful for speed and temporary state.
+
+Use Redis later for:
+
+- Session blacklisting
+- Rate limiting
+- OTP storage
+- Temporary booking slot holds
+- Payment checkout locks
+- Frequently searched marketplace filters
+- Background job queues
+
+Temporary booking holds are especially important once real payments are introduced. A customer should not be able to start paying for a slot that another customer already grabbed.
+
+### When To Add Search Infrastructure
+
+MongoDB text search can work initially.
+
+Use a dedicated search service later if marketplace search becomes important.
+
+Options:
+
+- MongoDB Atlas Search
+- Meilisearch
+- Typesense
+- Elasticsearch or OpenSearch
+
+Search features that may need this:
+
+- Typo tolerance
+- Service synonyms
+- Ranking by distance and popularity
+- Autocomplete
+- Faceted search
+- Search analytics
+
+### Future Scaling Pattern
+
+Start simple:
+
+```text
+React frontend -> NestJS API -> MongoDB Atlas
+```
+
+Then evolve to:
+
+```text
+React frontend
+NestJS API
+MongoDB Atlas
+S3/CloudFront for media
+Redis for locks/cache/queues
+Payment provider
+Email/SMS provider
+```
+
+Only later, if needed:
+
+```text
+PostgreSQL for ledger/reporting
+Search service for marketplace discovery
+Data warehouse for analytics
+```
+
+### Database Naming Rules
+
+Use predictable collection names:
+
+- lowercase
+- plural
+- snake_case where needed
+
+Good:
+
+```text
+customer_profiles
+business_media
+audit_logs
+marketplace_events
+```
+
+Avoid:
+
+```text
+customerData
+BusinessDetails
+misc
+temp
+```
+
+### Data Integrity Rules
+
+Important future rules:
+
+- One user can have one customer profile.
+- One business owner can initially own one business.
+- Business slug must be unique.
+- Published businesses must have at least one active service.
+- Bookings must store service snapshot fields.
+- Payments must not be deleted after creation.
+- Payment changes should be additive or audited.
+- Business profile changes should be audit logged.
+- Customer location should be optional and permission-based.
+- Personal data should be deletable or anonymizable if required by law.
+
+### Analytics Data Strategy
+
+Early analytics can be calculated directly from bookings and payments.
+
+Later, use aggregated collections:
+
+```text
+business_daily_metrics
+service_daily_metrics
+marketplace_daily_metrics
+```
+
+Example fields:
+
+```ts
+businessId
+date
+bookingsCreated
+bookingsCompleted
+bookingsCancelled
+grossRevenue
+paidRevenue
+newCustomers
+profileViews
+bookingClicks
+```
+
+This prevents slow dashboard queries once bookings and events grow.
+
 ## Implementation Phases
 
 ### Phase 1: Role Split And Onboarding

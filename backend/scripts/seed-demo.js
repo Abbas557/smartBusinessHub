@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema(
     email: { type: String, unique: true, lowercase: true, trim: true },
     password: { type: String, select: false },
     role: { type: String, default: 'BUSINESS_OWNER' },
+    phone: { type: String, default: null },
     avatarUrl: { type: String, default: null },
     refreshToken: { type: String, default: null, select: false },
     isActive: { type: Boolean, default: true },
@@ -64,6 +65,13 @@ const businessSchema = new mongoose.Schema(
     phone: String,
     address: String,
     city: String,
+    area: String,
+    pincode: String,
+    location: {
+      type: { type: String, enum: ['Point'] },
+      coordinates: { type: [Number], default: undefined },
+    },
+    serviceRadiusKm: { type: Number, default: 10 },
     logoUrl: String,
     bannerUrl: String,
     services: [serviceSchema],
@@ -96,6 +104,24 @@ const customerSchema = new mongoose.Schema(
 );
 customerSchema.index({ businessId: 1, email: 1 }, { unique: true });
 
+const customerProfileSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true, index: true },
+    phone: String,
+    city: String,
+    area: String,
+    pincode: String,
+    location: {
+      type: { type: String, enum: ['Point'] },
+      coordinates: { type: [Number], default: undefined },
+    },
+    savedAddresses: { type: [Object], default: [] },
+  },
+  { timestamps: true, collection: 'customer_profiles' },
+);
+customerProfileSchema.index({ city: 1, area: 1, pincode: 1 });
+customerProfileSchema.index({ location: '2dsphere' });
+
 const bookingSchema = new mongoose.Schema(
   {
     businessId: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', index: true },
@@ -121,6 +147,7 @@ const bookingSchema = new mongoose.Schema(
 const User = mongoose.model('User', userSchema);
 const Business = mongoose.model('Business', businessSchema);
 const Customer = mongoose.model('Customer', customerSchema);
+const CustomerProfile = mongoose.model('CustomerProfile', customerProfileSchema);
 const Booking = mongoose.model('Booking', bookingSchema);
 
 const demoEmail = 'demo@smartbusinesshub.local';
@@ -144,8 +171,11 @@ async function main() {
       await Customer.deleteMany({ businessId: oldBusiness._id });
       await Business.deleteOne({ _id: oldBusiness._id });
     }
+    await CustomerProfile.deleteMany({ userId: existingUser._id });
     await User.deleteOne({ _id: existingUser._id });
   }
+  const oldDemoUsers = await User.find({ email: /@smartbusinesshub\.local$/ });
+  await CustomerProfile.deleteMany({ userId: { $in: oldDemoUsers.map((item) => item._id) } });
   await User.deleteMany({ email: /@smartbusinesshub\.local$/ });
   const existingDemoBusinesses = await Business.find({
     slug: { $in: ['aster-studio-salon', 'pulsefit-studio', 'citycare-dental-clinic'] },
@@ -162,6 +192,7 @@ async function main() {
   const user = await User.create({
     name: 'Demo Owner',
     email: demoEmail,
+    phone: '+91 98765 43210',
     password,
     role: 'BUSINESS_OWNER',
     isActive: true,
@@ -178,6 +209,10 @@ async function main() {
     phone: '+91 98765 43210',
     address: 'MG Road',
     city: 'Lucknow',
+    area: 'MG Road',
+    pincode: '226001',
+    location: { type: 'Point', coordinates: [80.9462, 26.8467] },
+    serviceRadiusKm: 12,
     isPublished: true,
     services: [
       {
@@ -294,6 +329,7 @@ async function main() {
     {
       name: 'PulseFit Owner',
       email: 'pulsefit@smartbusinesshub.local',
+      phone: '+91 98765 43211',
       password,
       role: 'BUSINESS_OWNER',
       isActive: true,
@@ -301,11 +337,30 @@ async function main() {
     {
       name: 'CityCare Owner',
       email: 'citycare@smartbusinesshub.local',
+      phone: '+91 98765 43212',
       password,
       role: 'BUSINESS_OWNER',
       isActive: true,
     },
   ]);
+
+  const customerUser = await User.create({
+    name: 'Demo Customer',
+    email: 'customer@smartbusinesshub.local',
+    phone: '+91 90000 00010',
+    password,
+    role: 'CUSTOMER',
+    isActive: true,
+  });
+
+  await CustomerProfile.create({
+    userId: customerUser._id,
+    phone: '+91 90000 00010',
+    city: 'Lucknow',
+    area: 'Gomti Nagar',
+    pincode: '226010',
+    location: { type: 'Point', coordinates: [81.0107, 26.8626] },
+  });
 
   await Business.insertMany([
     {
@@ -318,6 +373,10 @@ async function main() {
       phone: '+91 98765 43211',
       address: 'Hazratganj',
       city: 'Lucknow',
+      area: 'Hazratganj',
+      pincode: '226001',
+      location: { type: 'Point', coordinates: [80.9437, 26.8504] },
+      serviceRadiusKm: 8,
       isPublished: true,
       totalBookings: 18,
       services: [
@@ -345,6 +404,10 @@ async function main() {
       phone: '+91 98765 43212',
       address: 'Gomti Nagar',
       city: 'Lucknow',
+      area: 'Gomti Nagar',
+      pincode: '226010',
+      location: { type: 'Point', coordinates: [81.0107, 26.8626] },
+      serviceRadiusKm: 10,
       isPublished: true,
       totalBookings: 26,
       services: [
@@ -367,6 +430,8 @@ async function main() {
   console.log('Demo data seeded.');
   console.log(`Email: ${demoEmail}`);
   console.log(`Password: ${demoPassword}`);
+  console.log('Customer Email: customer@smartbusinesshub.local');
+  console.log(`Customer Password: ${demoPassword}`);
   console.log(`Public URL: /b/${business.slug}`);
 }
 

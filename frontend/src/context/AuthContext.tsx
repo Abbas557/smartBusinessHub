@@ -7,7 +7,12 @@ import React, {
   useRef,
 } from 'react';
 import { User, AuthState } from '../types';
-import authApi, { LoginPayload, RegisterPayload } from '../api/auth.api';
+import authApi, {
+  LoginPayload,
+  RegisterCustomerPayload,
+  RegisterOwnerPayload,
+  RegisterPayload,
+} from '../api/auth.api';
 import { setAccessToken } from '../api/axios';
 
 // ─── State & Actions ──────────────────────────────────────────────────────────
@@ -52,8 +57,10 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 // ─── Context ──────────────────────────────────────────────────────────────────
 
 interface AuthContextType extends AuthState {
-  login: (payload: LoginPayload) => Promise<void>;
-  register: (payload: RegisterPayload) => Promise<void>;
+  login: (payload: LoginPayload) => Promise<User>;
+  register: (payload: RegisterPayload) => Promise<User>;
+  registerOwner: (payload: RegisterOwnerPayload) => Promise<User>;
+  registerCustomer: (payload: RegisterCustomerPayload) => Promise<User>;
   logout: () => Promise<void>;
 }
 
@@ -102,12 +109,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const { user, accessToken } = await authApi.login(payload);
     setAccessToken(accessToken);
     dispatch({ type: 'SET_USER', payload: { user, accessToken } });
+    return user;
   }, []);
 
   const register = useCallback(async (payload: RegisterPayload) => {
     const { user, accessToken } = await authApi.register(payload);
     setAccessToken(accessToken);
     dispatch({ type: 'SET_USER', payload: { user, accessToken } });
+    return user;
+  }, []);
+
+  const registerOwner = useCallback(async (payload: RegisterOwnerPayload) => {
+    const { user, accessToken } = await authApi.registerOwner(payload);
+    setAccessToken(accessToken);
+    dispatch({ type: 'SET_USER', payload: { user, accessToken } });
+    return user;
+  }, []);
+
+  const registerCustomer = useCallback(async (payload: RegisterCustomerPayload) => {
+    const { user, accessToken } = await authApi.registerCustomer(payload);
+    setAccessToken(accessToken);
+    dispatch({ type: 'SET_USER', payload: { user, accessToken } });
+    return user;
   }, []);
 
   const logout = useCallback(async () => {
@@ -120,7 +143,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        login,
+        register,
+        registerOwner,
+        registerCustomer,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

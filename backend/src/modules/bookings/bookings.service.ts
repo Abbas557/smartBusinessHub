@@ -37,6 +37,20 @@ export class BookingsService {
   ) {}
 
   async createPublicBooking(dto: CreateBookingDto): Promise<BookingDocument> {
+    return this.createBooking(dto);
+  }
+
+  async createCustomerBooking(
+    customerUserId: string,
+    dto: CreateBookingDto,
+  ): Promise<BookingDocument> {
+    return this.createBooking(dto, customerUserId);
+  }
+
+  private async createBooking(
+    dto: CreateBookingDto,
+    customerUserId?: string,
+  ): Promise<BookingDocument> {
     const business = await this.businessService.getPublicProfileById(
       dto.businessId,
     );
@@ -76,6 +90,9 @@ export class BookingsService {
     const booking = await this.bookingDao.create({
       businessId: new Types.ObjectId(business.id) as any,
       customerId: new Types.ObjectId(customer.id) as any,
+      customerUserId: customerUserId
+        ? (new Types.ObjectId(customerUserId) as any)
+        : null,
       customerName: dto.customerName,
       customerEmail: dto.customerEmail.toLowerCase(),
       customerPhone: dto.customerPhone,
@@ -99,6 +116,10 @@ export class BookingsService {
   async findForOwner(ownerId: string): Promise<BookingDocument[]> {
     const business = await this.businessService.getMyBusiness(ownerId);
     return this.bookingDao.findByBusiness(business.id);
+  }
+
+  async findForCustomer(customerUserId: string): Promise<BookingDocument[]> {
+    return this.bookingDao.findByCustomerUser(customerUserId);
   }
 
   async findPublicById(bookingId: string): Promise<BookingDocument | null> {

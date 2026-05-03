@@ -7,8 +7,15 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { UserDao } from '../users/dao/user.dao';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
-import { UserDocument } from '../users/user.schema';
+import {
+  RegisterDto,
+  LoginDto,
+  RegisterCustomerDto,
+  RegisterOwnerDto,
+} from './dto/auth.dto';
+import { Role, UserDocument } from '../users/user.schema';
+import { BusinessService } from '../business/business.service';
+import { CustomerProfilesService } from '../customer-profiles/customer-profiles.service';
 
 export interface JwtPayload {
   sub: string;
@@ -36,11 +43,66 @@ export class AuthService {
     private readonly userDao: UserDao,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly businessService: BusinessService,
+    private readonly customerProfilesService: CustomerProfilesService,
   ) {}
 
   // ─── REGISTER ──────────────────────────────────────────────────────────────
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
+    return this.createAccount(dto, Role.BUSINESS_OWNER);
+  }
+
+  async registerOwner(dto: RegisterOwnerDto): Promise<AuthResponse> {
+    const auth = await this.createAccount(dto, Role.BUSINESS_OWNER);
+    const userId = this.getAuthUserId(auth.user);
+
+    try {
+      const business = await this.businessService.create(
+        userId,
+        dto.business,
+      );
+
+      if (dto.firstService) {
+        await this.businessService.addService(userId, dto.firstService);
+      }
+
+      return {
+        ...auth,
+        user: {
+          ...auth.user,
+          businessId: business.id,
+        } as Partial<UserDocument>,
+      };
+    } catch (error) {
+      await this.userDao.deleteById(userId);
+      throw error;
+    }
+  }
+
+  async registerCustomer(dto: RegisterCustomerDto): Promise<AuthResponse> {
+    const auth = await this.createAccount(dto, Role.CUSTOMER);
+    const userId = this.getAuthUserId(auth.user);
+
+    try {
+      await this.customerProfilesService.createForUser(userId, {
+        phone: dto.profile?.phone || dto.phone,
+        city: dto.profile?.city,
+        area: dto.profile?.area,
+        pincode: dto.profile?.pincode,
+        location: dto.profile?.location,
+      });
+      return auth;
+    } catch (error) {
+      await this.userDao.deleteById(userId);
+      throw error;
+    }
+  }
+
+  private async createAccount(
+    dto: RegisterDto,
+    role: Role,
+  ): Promise<AuthResponse> {
     // 1. Check if email is already taken
     const exists = await this.userDao.exists({ email: dto.email.toLowerCase() });
     if (exists) {
@@ -53,8 +115,10 @@ export class AuthService {
     // 3. Create user
     const user = await this.userDao.create({
       name: dto.name,
+      phone: dto.phone,
       email: dto.email.toLowerCase(),
       password: hashedPassword,
+      role,
     });
 
     // 4. Generate tokens
@@ -227,6 +291,11 @@ export class AuthService {
     delete obj.refreshToken;
     delete obj.__v;
     return obj;
+  }
+
+  private getAuthUserId(user: Partial<UserDocument>): string {
+    const rawId = user.id || user['_id'];
+    return rawId?.toString();
   }
 
   getRefreshTokenCookieOptions() {

@@ -28,8 +28,23 @@ const bookingApi = {
     return data.data;
   },
 
+  createForCustomer: async (payload: CreateBookingPayload): Promise<Booking> => {
+    const { data } = await axiosInstance.post<ApiResponse<Booking>>(
+      '/bookings/customer',
+      payload,
+    );
+    return data.data;
+  },
+
   list: async (): Promise<Booking[]> => {
     const { data } = await axiosInstance.get<ApiResponse<Booking[]>>('/bookings');
+    return data.data;
+  },
+
+  listMine: async (): Promise<Booking[]> => {
+    const { data } = await axiosInstance.get<ApiResponse<Booking[]>>(
+      '/bookings/customer/me',
+    );
     return data.data;
   },
 

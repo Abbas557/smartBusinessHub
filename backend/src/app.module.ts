@@ -8,6 +8,7 @@ import { CustomersModule } from './modules/customers/customers.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { CustomerProfilesModule } from './modules/customer-profiles/customer-profiles.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     UsersModule,
     BusinessModule,
     CustomersModule,
+    CustomerProfilesModule,
     BookingsModule,
     UploadModule,
     PaymentsModule,
