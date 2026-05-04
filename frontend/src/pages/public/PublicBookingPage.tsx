@@ -17,6 +17,7 @@ import {
 } from '../../hooks/usePayments';
 import { useAuth } from '../../context/AuthContext';
 import { useCustomerProfile } from '../../hooks/useCustomerProfile';
+import { useCustomerEvents } from '../../hooks/useCustomerEvents';
 import { Button, Card, Input, Select, Spinner, Textarea } from '../../components/ui';
 import { Booking, PaymentMethod } from '../../types';
 
@@ -56,6 +57,7 @@ const PublicBookingPage: React.FC = () => {
   const demoCheckout = useDemoCheckout();
   const createRazorpayOrder = useCreateRazorpayOrder();
   const verifyRazorpayPayment = useVerifyRazorpayPayment();
+  const { trackEvent } = useCustomerEvents(isCustomer);
 
   const selectedServiceId = serviceId || business?.services?.[0]?._id;
   const { data: slots = [], isFetching: slotsLoading } = useBookingSlots(
@@ -73,6 +75,24 @@ const PublicBookingPage: React.FC = () => {
     [business],
   );
   const selectedService = business?.services.find((service) => service._id === selectedServiceId);
+
+  useEffect(() => {
+    if (!business) return;
+    trackEvent({
+      eventType: 'booking_intent',
+      businessId: business._id,
+      businessSlug: business.slug,
+      serviceId: selectedService?._id,
+      serviceName: selectedService?.name,
+      category: business.category,
+      city: business.city,
+      area: business.area,
+      pincode: business.pincode,
+      metadata: {
+        source: 'booking_page',
+      },
+    });
+  }, [business, selectedService, trackEvent]);
 
   const {
     register,
@@ -113,6 +133,24 @@ const PublicBookingPage: React.FC = () => {
     const booking = await (isCustomer
       ? createCustomerBooking.mutateAsync(payload)
       : createBooking.mutateAsync(payload));
+    if (!isCustomer) {
+      trackEvent({
+        eventType: 'booking_created',
+        businessId: business._id,
+        businessSlug: business.slug,
+        serviceId: selectedServiceId,
+        serviceName: selectedService?.name,
+        category: business.category,
+        city: business.city,
+        area: business.area,
+        pincode: business.pincode,
+        metadata: {
+          bookingId: booking._id,
+          paymentMethod,
+          source: 'booking_form',
+        },
+      });
+    }
 
     if (paymentMethod === 'demo_card') {
       await demoCheckout.mutateAsync({
@@ -296,6 +334,23 @@ const PublicBookingPage: React.FC = () => {
                 onChange={(event) => {
                   setServiceId(event.target.value);
                   setSelectedSlot('');
+                  const nextService = business.services.find(
+                    (service) => service._id === event.target.value,
+                  );
+                  trackEvent({
+                    eventType: 'booking_intent',
+                    businessId: business._id,
+                    businessSlug: business.slug,
+                    serviceId: nextService?._id,
+                    serviceName: nextService?.name,
+                    category: business.category,
+                    city: business.city,
+                    area: business.area,
+                    pincode: business.pincode,
+                    metadata: {
+                      source: 'service_select',
+                    },
+                  });
                 }}
               />
               <Input

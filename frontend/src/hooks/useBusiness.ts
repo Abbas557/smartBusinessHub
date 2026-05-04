@@ -40,6 +40,7 @@ export const usePublicBusinesses = (params: {
   lat?: number;
   lng?: number;
   radiusKm?: number;
+  sort?: 'nearest' | 'top-rated' | 'most-booked';
 }) => {
   return useQuery({
     queryKey: QUERY_KEYS.business.marketplace(params),

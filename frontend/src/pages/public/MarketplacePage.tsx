@@ -1,18 +1,32 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
+  Activity,
   ArrowRight,
   Building2,
   CalendarDays,
+  CalendarHeart,
+  Compass,
+  Dumbbell,
   Gem,
+  GraduationCap,
   Heart,
+  HeartPulse,
   MapPin,
   Navigation,
   Search,
+  ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
   Star,
+  Stethoscope,
+  TrendingUp,
+  Utensils,
+  Wrench,
 } from 'lucide-react';
 import { usePublicBusinesses } from '../../hooks/useBusiness';
+import { useExploreHome, useRecommendations } from '../../hooks/useDiscovery';
+import { useCustomerEvents } from '../../hooks/useCustomerEvents';
 import { useAuth } from '../../context/AuthContext';
 import {
   useCustomerProfile,
@@ -22,7 +36,7 @@ import {
 import { BusinessCategory } from '../../types';
 import { Badge, Button, Card, Input, Select, Spinner } from '../../components/ui';
 
-const categories: Array<{ value: BusinessCategory | 'all'; label: string }> = [
+const categoryFilterOptions: Array<{ value: BusinessCategory | 'all'; label: string }> = [
   { value: 'all', label: 'All categories' },
   { value: 'salon', label: 'Salon' },
   { value: 'gym', label: 'Gym' },
@@ -32,6 +46,26 @@ const categories: Array<{ value: BusinessCategory | 'all'; label: string }> = [
   { value: 'tuition', label: 'Tuition' },
   { value: 'other', label: 'Other' },
 ];
+
+const iconMap = {
+  activity: Activity,
+  'calendar-heart': CalendarHeart,
+  dumbbell: Dumbbell,
+  'graduation-cap': GraduationCap,
+  'heart-pulse': HeartPulse,
+  sparkles: Sparkles,
+  stethoscope: Stethoscope,
+  utensils: Utensils,
+  wrench: Wrench,
+};
+
+const accentClasses: Record<string, string> = {
+  burgundy: 'from-brand-900 to-brand-600 text-white',
+  clay: 'from-[#d47c65] to-[#8f3435] text-white',
+  gold: 'from-gold-500 to-[#9b6a20] text-white',
+  rose: 'from-blush-300 to-brand-500 text-brand-950',
+  sage: 'from-[#dbe9df] to-[#78937d] text-brand-950',
+};
 
 const MarketplacePage: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -45,12 +79,30 @@ const MarketplacePage: React.FC = () => {
   const [sort, setSort] = useState<'nearest' | 'top-rated' | 'most-booked'>('nearest');
   const saveBusiness = useSaveBusiness();
   const unsaveBusiness = useUnsaveBusiness();
+  const { trackEvent } = useCustomerEvents(isCustomer);
 
   useEffect(() => {
     if (!isCustomer || !profile) return;
     setCity((value) => value || profile.city || '');
     setArea((value) => value || profile.area || '');
   }, [isCustomer, profile]);
+
+  useEffect(() => {
+    const query = search.trim();
+    if (query.length < 2) return;
+
+    const timeoutId = window.setTimeout(() => {
+      trackEvent({
+        eventType: 'search',
+        query,
+        category: category === 'all' ? undefined : category,
+        city: city.trim() || undefined,
+        area: area.trim() || undefined,
+      });
+    }, 700);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [area, category, city, search, trackEvent]);
 
   const nearbyCoordinates = profile?.location?.coordinates;
   const hasNearbySearch = Boolean(isCustomer && nearbyCoordinates?.length === 2);
@@ -75,6 +127,25 @@ const MarketplacePage: React.FC = () => {
   }, [area, category, city, hasNearbySearch, nearbyCoordinates, radiusKm, search, sort]);
 
   const { data: businesses = [], isLoading } = usePublicBusinesses(params);
+  const { data: exploreHome } = useExploreHome();
+  const recommendationParams = useMemo(() => {
+    if (nearbyCoordinates?.length === 2) {
+      return {
+        city: city.trim() || undefined,
+        area: area.trim() || undefined,
+        lng: nearbyCoordinates[0],
+        lat: nearbyCoordinates[1],
+        radiusKm,
+      };
+    }
+
+    return {
+      city: city.trim() || undefined,
+      area: area.trim() || undefined,
+      radiusKm,
+    };
+  }, [area, city, nearbyCoordinates, radiusKm]);
+  const { data: recommendations } = useRecommendations(recommendationParams, isCustomer);
   const savedBusinessIds = new Set(profile?.savedBusinessIds || []);
   const businessesWithCoordinates = businesses.filter(
     (business) => business.location?.coordinates?.length === 2,
@@ -160,8 +231,19 @@ const MarketplacePage: React.FC = () => {
             />
             <Select
               value={category}
-              onChange={(event) => setCategory(event.target.value as BusinessCategory | 'all')}
-              options={categories}
+              onChange={(event) => {
+                const nextCategory = event.target.value as BusinessCategory | 'all';
+                setCategory(nextCategory);
+                if (nextCategory !== 'all') {
+                  trackEvent({
+                    eventType: 'click_category',
+                    category: nextCategory,
+                    city: city.trim() || undefined,
+                    area: area.trim() || undefined,
+                  });
+                }
+              }}
+              options={categoryFilterOptions}
             />
             <Input
               value={city}
@@ -200,6 +282,170 @@ const MarketplacePage: React.FC = () => {
             />
         </div>
       </section>
+
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
+        <Card className="overflow-hidden p-0">
+          <div className="flex items-center justify-between gap-4 border-b border-brand-100 p-5">
+            <div>
+              <Badge variant="yellow">Explore</Badge>
+              <h2 className="mt-2 font-display text-2xl font-semibold text-brand-900">
+                Collections built around what customers actually book
+              </h2>
+            </div>
+            <Compass className="hidden h-8 w-8 text-brand-800/35 sm:block" />
+          </div>
+          <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
+            {(exploreHome?.collections || []).slice(0, 6).map((collection) => {
+              const Icon = iconMap[collection.icon as keyof typeof iconMap] || Sparkles;
+              return (
+                <button
+                  key={collection._id}
+                  type="button"
+                  onClick={() => {
+                    setCategory(collection.categories[0] || 'all');
+                    setSearch(collection.keywords[0] || '');
+                    trackEvent({
+                      eventType: 'click_collection',
+                      collectionSlug: collection.slug,
+                      category: collection.categories[0],
+                      query: collection.keywords[0],
+                      city: city.trim() || undefined,
+                      area: area.trim() || undefined,
+                      metadata: {
+                        title: collection.title,
+                      },
+                    });
+                  }}
+                  className="group overflow-hidden rounded-lg border border-brand-100 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft"
+                >
+                  <div className={`bg-gradient-to-br ${accentClasses[collection.accent] || accentClasses.rose} p-4`}>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/22 backdrop-blur">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <h3 className="mt-5 font-display text-xl font-semibold">
+                      {collection.title}
+                    </h3>
+                  </div>
+                  <div className="p-4">
+                    <p className="line-clamp-2 text-sm leading-6 text-brand-800/65">
+                      {collection.subtitle}
+                    </p>
+                    <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-brand-700">
+                      Explore collection
+                      <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+
+        <Card className="relative overflow-hidden bg-brand-900 p-6 text-white">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(247,217,214,0.32),transparent_32%),radial-gradient(circle_at_78%_82%,rgba(184,147,79,0.28),transparent_28%)]" />
+          <div className="relative">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/12">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <h2 className="mt-5 font-display text-3xl font-semibold">
+              Better matches, less scrolling.
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-blush-100/75">
+              Recommendations now combine location, ratings, bookings, saved vendors, and category intent.
+            </p>
+            <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs">
+              {[
+                ['Local', 'Area fit'],
+                ['Rated', 'Trust signal'],
+                ['Booked', 'Demand'],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-lg bg-white/10 p-3">
+                  <p className="font-semibold">{label}</p>
+                  <p className="mt-1 text-white/55">{value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      </section>
+
+      {(recommendations?.sections || []).length > 0 && (
+        <section className="space-y-5">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <Badge variant="blue">Recommended</Badge>
+              <h2 className="mt-2 font-display text-2xl font-semibold text-brand-900">
+                Picks tuned for your marketplace session
+              </h2>
+            </div>
+            <div className="hidden items-center gap-2 rounded-lg border border-brand-100 bg-white px-3 py-2 text-xs font-medium text-brand-800/55 sm:flex">
+              <TrendingUp className="h-4 w-4" />
+              {recommendations?.strategy}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {(recommendations?.sections || []).slice(0, 3).map((section) => (
+              <Card key={section.id} className="p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-display text-xl font-semibold text-brand-900">
+                      {section.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-brand-800/60">{section.subtitle}</p>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  {section.businesses.slice(0, 4).map((business) => (
+                    <Link
+                      key={`${section.id}-${business._id}`}
+                      to={`/b/${business.slug}`}
+                      className="group rounded-lg border border-brand-100 bg-brand-50 p-3 transition hover:bg-white hover:shadow-sm"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-brand-100">
+                          {business.logoUrl ? (
+                            <img
+                              src={business.logoUrl}
+                              alt={`${business.name} logo`}
+                              className="h-full w-full rounded-lg object-contain p-1.5"
+                            />
+                          ) : (
+                            <Building2 className="h-5 w-5 text-brand-700/50" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="truncate text-sm font-semibold text-brand-900">
+                            {business.name}
+                          </h4>
+                          <p className="mt-1 text-xs capitalize text-brand-800/55">
+                            {business.category}
+                            {typeof business.distanceKm === 'number'
+                              ? ` · ${business.distanceKm} km`
+                              : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-center justify-between text-xs text-brand-800/55">
+                        <span className="inline-flex items-center gap-1">
+                          <Star className="h-3.5 w-3.5 text-amber-500" />
+                          {business.reviewCount
+                            ? business.averageRating?.toFixed(1)
+                            : 'New'}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-brand-700">
+                          View
+                          <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="flex items-center justify-between">
           <div>
@@ -378,7 +624,24 @@ const MarketplacePage: React.FC = () => {
                         {savedBusinessIds.has(business._id) ? 'Saved' : 'Save'}
                       </Button>
                       <Link to={`/b/${business.slug}/book`} className="col-span-2">
-                        <Button className="w-full" leftIcon={<CalendarDays className="h-4 w-4" />}>
+                        <Button
+                          className="w-full"
+                          leftIcon={<CalendarDays className="h-4 w-4" />}
+                          onClick={() =>
+                            trackEvent({
+                              eventType: 'booking_intent',
+                              businessId: business._id,
+                              businessSlug: business.slug,
+                              category: business.category,
+                              city: business.city,
+                              area: business.area,
+                              pincode: business.pincode,
+                              metadata: {
+                                source: 'marketplace_card',
+                              },
+                            })
+                          }
+                        >
                           Book
                         </Button>
                       </Link>

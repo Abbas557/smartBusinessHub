@@ -43,6 +43,20 @@ export class BusinessDao {
     return this.businessModel.findOne({ slug }).exec();
   }
 
+  async findPublishedByIds(ids: string[]): Promise<BusinessDocument[]> {
+    const objectIds = ids
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+
+    if (objectIds.length === 0) return [];
+
+    return this.businessModel
+      .find({ _id: { $in: objectIds }, isPublished: true })
+      .select('-ownerId')
+      .sort({ averageRating: -1, totalBookings: -1, updatedAt: -1 })
+      .exec();
+  }
+
   // Public published businesses (for search / public pages)
   async findPublished(
     filter: FilterQuery<BusinessDocument> = {},

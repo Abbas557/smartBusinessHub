@@ -192,6 +192,88 @@ export interface Review {
   updatedAt: string;
 }
 
+export interface ServiceCategoryOption {
+  _id: string;
+  name: string;
+  slug: string;
+  businessCategory: BusinessCategory;
+  description?: string;
+  icon: string;
+  keywords: string[];
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface ServiceCollection {
+  _id: string;
+  title: string;
+  slug: string;
+  subtitle?: string;
+  description?: string;
+  icon: string;
+  categories: BusinessCategory[];
+  keywords: string[];
+  accent: string;
+  displayOrder: number;
+  isFeatured: boolean;
+  isActive: boolean;
+}
+
+export interface ServiceDiscoveryHome {
+  categories: ServiceCategoryOption[];
+  collections: ServiceCollection[];
+}
+
+export interface RecommendationSection {
+  id: string;
+  title: string;
+  subtitle: string;
+  businesses: Business[];
+}
+
+export interface RecommendationHome {
+  generatedAt: string;
+  strategy: string;
+  sections: RecommendationSection[];
+}
+
+export type CustomerEventType =
+  | 'search'
+  | 'view_business'
+  | 'click_collection'
+  | 'click_category'
+  | 'save_business'
+  | 'unsave_business'
+  | 'booking_intent'
+  | 'booking_created';
+
+export interface CustomerEventPayload {
+  eventType: CustomerEventType;
+  businessId?: string;
+  businessSlug?: string;
+  serviceId?: string;
+  serviceName?: string;
+  category?: BusinessCategory;
+  collectionSlug?: string;
+  query?: string;
+  city?: string;
+  area?: string;
+  pincode?: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
+  metadata?: Record<string, unknown>;
+}
+
+export interface CustomerEvent extends CustomerEventPayload {
+  _id: string;
+  userId?: string | null;
+  sessionId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── API Response shape ───────────────────────────────────────────────────────
 
 export interface ApiResponse<T> {

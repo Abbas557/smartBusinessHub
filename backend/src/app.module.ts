@@ -11,6 +11,9 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { CustomerProfilesModule } from './modules/customer-profiles/customer-profiles.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { ServiceDiscoveryModule } from './modules/service-discovery/service-discovery.module';
+import { RecommendationsModule } from './modules/recommendations/recommendations.module';
+import { CustomerEventsModule } from './modules/customer-events/customer-events.module';
 
 @Module({
   imports: [
@@ -41,6 +44,9 @@ import { AdminModule } from './modules/admin/admin.module';
     UploadModule,
     PaymentsModule,
     ReviewsModule,
+    ServiceDiscoveryModule,
+    CustomerEventsModule,
+    RecommendationsModule,
     AdminModule,
   ],
 })

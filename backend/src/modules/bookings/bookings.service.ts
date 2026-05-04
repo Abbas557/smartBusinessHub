@@ -8,6 +8,8 @@ import { Types } from 'mongoose';
 import { BusinessService } from '../business/business.service';
 import { CustomersService } from '../customers/customers.service';
 import { MailService } from '../mail/mail.service';
+import { CustomerEventsService } from '../customer-events/customer-events.service';
+import { CustomerEventType } from '../customer-events/customer-event.schema';
 import {
   BookingDocument,
   BookingStatus,
@@ -34,6 +36,7 @@ export class BookingsService {
     private readonly businessService: BusinessService,
     private readonly customersService: CustomersService,
     private readonly mailService: MailService,
+    private readonly customerEventsService: CustomerEventsService,
   ) {}
 
   async createPublicBooking(dto: CreateBookingDto): Promise<BookingDocument> {
@@ -112,6 +115,24 @@ export class BookingsService {
     });
 
     await this.businessService.incrementBookingCount(business.id);
+    if (customerUserId) {
+      await this.customerEventsService.recordSystemEvent(customerUserId, {
+        eventType: CustomerEventType.BOOKING_CREATED,
+        businessId: business.id,
+        businessSlug: business.slug,
+        serviceId: dto.serviceId,
+        serviceName: service.name,
+        category: business.category,
+        city: business.city,
+        area: business.area,
+        pincode: business.pincode,
+        metadata: {
+          bookingId: booking.id,
+          paymentMethod: booking.paymentMethod,
+          servicePrice: booking.servicePrice,
+        },
+      });
+    }
     await this.mailService.sendBookingConfirmation({ business, booking });
     return booking;
   }

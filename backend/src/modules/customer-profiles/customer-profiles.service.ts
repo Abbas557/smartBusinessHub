@@ -3,13 +3,20 @@ import { Types } from 'mongoose';
 import { CustomerProfileDocument } from './customer-profile.schema';
 import { CustomerProfileDao } from './dao/customer-profile.dao';
 import {
+  CustomerEventsService,
+} from '../customer-events/customer-events.service';
+import { CustomerEventType } from '../customer-events/customer-event.schema';
+import {
   CreateCustomerProfileDto,
   UpdateCustomerProfileDto,
 } from './dto/customer-profile.dto';
 
 @Injectable()
 export class CustomerProfilesService {
-  constructor(private readonly customerProfileDao: CustomerProfileDao) {}
+  constructor(
+    private readonly customerProfileDao: CustomerProfileDao,
+    private readonly customerEventsService: CustomerEventsService,
+  ) {}
 
   async createForUser(
     userId: string,
@@ -48,6 +55,10 @@ export class CustomerProfilesService {
       businessId,
     );
     if (!updated) throw new NotFoundException('Customer profile not found');
+    await this.customerEventsService.recordSystemEvent(userId, {
+      eventType: CustomerEventType.SAVE_BUSINESS,
+      businessId,
+    });
     return updated;
   }
 
@@ -60,6 +71,10 @@ export class CustomerProfilesService {
       businessId,
     );
     if (!updated) throw new NotFoundException('Customer profile not found');
+    await this.customerEventsService.recordSystemEvent(userId, {
+      eventType: CustomerEventType.UNSAVE_BUSINESS,
+      businessId,
+    });
     return updated;
   }
 

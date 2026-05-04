@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   ArrowRight,
@@ -15,14 +15,35 @@ import {
 } from 'lucide-react';
 import { usePublicBusiness } from '../../hooks/useBusiness';
 import { useBusinessReviews, useReportReview } from '../../hooks/useReviews';
+import { useCustomerEvents } from '../../hooks/useCustomerEvents';
+import { useAuth } from '../../context/AuthContext';
 import { Badge, Button, Card, Select, Spinner } from '../../components/ui';
 
 const PublicBusinessPage: React.FC = () => {
   const { slug } = useParams();
+  const { isAuthenticated, user } = useAuth();
+  const isCustomer = isAuthenticated && user?.role === 'CUSTOMER';
   const [reviewFilter, setReviewFilter] = useState<'all' | '5' | '4plus' | 'reported'>('all');
   const { data: business, isLoading, isError } = usePublicBusiness(slug);
   const { data: reviews = [] } = useBusinessReviews(business?._id);
   const reportReview = useReportReview(business?._id);
+  const { trackEvent } = useCustomerEvents(isCustomer);
+
+  useEffect(() => {
+    if (!business) return;
+    trackEvent({
+      eventType: 'view_business',
+      businessId: business._id,
+      businessSlug: business.slug,
+      category: business.category,
+      city: business.city,
+      area: business.area,
+      pincode: business.pincode,
+      metadata: {
+        source: 'business_profile',
+      },
+    });
+  }, [business, trackEvent]);
 
   if (isLoading) {
     return (
@@ -68,7 +89,23 @@ const PublicBusinessPage: React.FC = () => {
           <Link to="/marketplace" className="text-sm font-semibold text-brand-900">
             Smart Business Hub
           </Link>
-          <Link to={`/b/${business.slug}/book`}>
+          <Link
+            to={`/b/${business.slug}/book`}
+            onClick={() =>
+              trackEvent({
+                eventType: 'booking_intent',
+                businessId: business._id,
+                businessSlug: business.slug,
+                category: business.category,
+                city: business.city,
+                area: business.area,
+                pincode: business.pincode,
+                metadata: {
+                  source: 'profile_header',
+                },
+              })
+            }
+          >
             <Button size="sm" leftIcon={<ArrowRight className="h-4 w-4" />}>
               Book now
             </Button>
@@ -132,7 +169,24 @@ const PublicBusinessPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Link to={`/b/${business.slug}/book`} className="inline-flex">
+                  <Link
+                    to={`/b/${business.slug}/book`}
+                    className="inline-flex"
+                    onClick={() =>
+                      trackEvent({
+                        eventType: 'booking_intent',
+                        businessId: business._id,
+                        businessSlug: business.slug,
+                        category: business.category,
+                        city: business.city,
+                        area: business.area,
+                        pincode: business.pincode,
+                        metadata: {
+                          source: 'profile_hero',
+                        },
+                      })
+                    }
+                  >
                     <Button size="lg" variant="secondary" leftIcon={<CalendarDays className="h-4 w-4" />}>
                       Reserve your visit
                     </Button>

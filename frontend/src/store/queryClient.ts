@@ -42,4 +42,11 @@ export const QUERY_KEYS = {
     mine: () => ['reviews', 'mine'] as const,
     business: (businessId: string) => ['reviews', 'business', businessId] as const,
   },
+  discovery: {
+    home: () => ['discovery', 'home'] as const,
+    recommendations: (
+      params: Record<string, string | number | undefined>,
+      isCustomer: boolean,
+    ) => ['discovery', 'recommendations', isCustomer ? 'me' : 'public', params] as const,
+  },
 };
