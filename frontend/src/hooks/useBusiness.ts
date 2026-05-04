@@ -37,6 +37,7 @@ export const usePublicBusinesses = (params: {
   city?: string;
   area?: string;
   pincode?: string;
+  placeId?: string;
   lat?: number;
   lng?: number;
   radiusKm?: number;

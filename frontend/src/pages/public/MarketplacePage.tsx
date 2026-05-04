@@ -28,6 +28,7 @@ import { usePublicBusinesses } from '../../hooks/useBusiness';
 import { useExploreHome, useRecommendations } from '../../hooks/useDiscovery';
 import { useCustomerEvents } from '../../hooks/useCustomerEvents';
 import GoogleVendorMap from '../../components/maps/GoogleVendorMap';
+import GooglePlaceLocationInput from '../../components/maps/GooglePlaceLocationInput';
 import { useAuth } from '../../context/AuthContext';
 import {
   useCustomerProfile,
@@ -36,7 +37,7 @@ import {
 } from '../../hooks/useCustomerProfile';
 import { Business, BusinessCategory, RecommendationSection, ServiceCollection } from '../../types';
 import { Badge, Button, Card, Input, Select, Spinner } from '../../components/ui';
-import { hasGoogleMapsKey } from '../../lib/googleMaps';
+import { hasGoogleMapsKey, ParsedGoogleAddress } from '../../lib/googleMaps';
 
 const categoryFilterOptions: Array<{ value: BusinessCategory | 'all'; label: string }> = [
   { value: 'all', label: 'All categories' },
@@ -187,11 +188,24 @@ const MarketplacePage: React.FC = () => {
   const [category, setCategory] = useState<BusinessCategory | 'all'>('all');
   const [city, setCity] = useState('');
   const [area, setArea] = useState('');
+  const [selectedPlace, setSelectedPlace] = useState<ParsedGoogleAddress | null>(null);
   const [radiusKm, setRadiusKm] = useState(25);
   const [sort, setSort] = useState<'nearest' | 'top-rated' | 'most-booked'>('nearest');
   const saveBusiness = useSaveBusiness();
   const unsaveBusiness = useUnsaveBusiness();
   const { trackEvent } = useCustomerEvents(isCustomer);
+  const nearbyCoordinates = profile?.location?.coordinates;
+  const selectedCity = selectedPlace?.city || city.trim();
+  const selectedArea = selectedPlace?.area || area.trim();
+  const selectedPincode = selectedPlace?.pincode;
+  const searchCoordinates: [number, number] | undefined = useMemo(() => {
+    if (selectedPlace) return [selectedPlace.lng, selectedPlace.lat];
+    return nearbyCoordinates?.length === 2 ? nearbyCoordinates : undefined;
+  }, [nearbyCoordinates, selectedPlace]);
+  const hasNearbySearch = Boolean(searchCoordinates?.length === 2);
+  const selectedLocationLabel =
+    selectedPlace?.label ||
+    [selectedArea, selectedCity, profile?.pincode].filter(Boolean).join(', ');
 
   useEffect(() => {
     if (!isCustomer || !profile) return;
@@ -208,69 +222,90 @@ const MarketplacePage: React.FC = () => {
         eventType: 'search',
         query,
         category: category === 'all' ? undefined : category,
-        city: city.trim() || undefined,
-        area: area.trim() || undefined,
+        city: selectedCity || undefined,
+        area: selectedArea || undefined,
       });
     }, 700);
 
     return () => window.clearTimeout(timeoutId);
-  }, [area, category, city, search, trackEvent]);
-
-  const nearbyCoordinates = profile?.location?.coordinates;
-  const hasNearbySearch = Boolean(isCustomer && nearbyCoordinates?.length === 2);
+  }, [category, search, selectedArea, selectedCity, trackEvent]);
 
   const params = useMemo(() => {
     const baseParams = {
       search: search.trim() || undefined,
       category,
-      city: city.trim() || undefined,
-      area: area.trim() || undefined,
+      city: selectedCity || undefined,
+      area: selectedArea || undefined,
+      pincode: selectedPincode || undefined,
+      placeId: selectedPlace?.placeId || undefined,
       sort,
     };
 
-    if (!hasNearbySearch || !nearbyCoordinates) return baseParams;
+    if (!hasNearbySearch || !searchCoordinates) return baseParams;
 
     return {
       ...baseParams,
-      lng: nearbyCoordinates[0],
-      lat: nearbyCoordinates[1],
+      lng: searchCoordinates[0],
+      lat: searchCoordinates[1],
       radiusKm,
     };
-  }, [area, category, city, hasNearbySearch, nearbyCoordinates, radiusKm, search, sort]);
+  }, [
+    category,
+    hasNearbySearch,
+    radiusKm,
+    search,
+    searchCoordinates,
+    selectedArea,
+    selectedCity,
+    selectedPincode,
+    selectedPlace?.placeId,
+    sort,
+  ]);
 
   const { data: businesses = [], isLoading } = usePublicBusinesses(params);
   const { data: exploreHome } = useExploreHome();
   const recommendationParams = useMemo(() => {
-    if (nearbyCoordinates?.length === 2) {
+    if (searchCoordinates?.length === 2) {
       return {
-        city: city.trim() || undefined,
-        area: area.trim() || undefined,
-        lng: nearbyCoordinates[0],
-        lat: nearbyCoordinates[1],
+        city: selectedCity || undefined,
+        area: selectedArea || undefined,
+        pincode: selectedPincode || undefined,
+        placeId: selectedPlace?.placeId || undefined,
+        lng: searchCoordinates[0],
+        lat: searchCoordinates[1],
         radiusKm,
       };
     }
 
     return {
-      city: city.trim() || undefined,
-      area: area.trim() || undefined,
+      city: selectedCity || undefined,
+      area: selectedArea || undefined,
+      pincode: selectedPincode || undefined,
+      placeId: selectedPlace?.placeId || undefined,
       radiusKm,
     };
-  }, [area, city, nearbyCoordinates, radiusKm]);
+  }, [
+    radiusKm,
+    searchCoordinates,
+    selectedArea,
+    selectedCity,
+    selectedPincode,
+    selectedPlace?.placeId,
+  ]);
   const { data: recommendations } = useRecommendations(recommendationParams, isCustomer);
   const displayCollections =
     exploreHome?.collections?.length ? exploreHome.collections : fallbackCollections;
   const displayRecommendationSections =
     recommendations?.sections?.length
       ? recommendations.sections
-      : makeFallbackRecommendationSections(businesses, area.trim() || profile?.area);
+      : makeFallbackRecommendationSections(businesses, selectedArea || profile?.area);
   const savedBusinessIds = new Set(profile?.savedBusinessIds || []);
   const businessesWithCoordinates = businesses.filter(
     (business) => business.location?.coordinates?.length === 2,
   );
   const bounds = useMemo(() => {
     const coordinates = businessesWithCoordinates.map((business) => business.location!.coordinates);
-    if (nearbyCoordinates?.length === 2) coordinates.push(nearbyCoordinates);
+    if (searchCoordinates?.length === 2) coordinates.push(searchCoordinates);
     const lngs = coordinates.map(([lng]) => lng);
     const lats = coordinates.map(([, lat]) => lat);
     return {
@@ -279,7 +314,7 @@ const MarketplacePage: React.FC = () => {
       minLat: Math.min(...lats),
       maxLat: Math.max(...lats),
     };
-  }, [businessesWithCoordinates, nearbyCoordinates]);
+  }, [businessesWithCoordinates, searchCoordinates]);
 
   const getPinStyle = (coordinates: [number, number]) => {
     const lngRange = Math.max(bounds.maxLng - bounds.minLng, 0.01);
@@ -356,25 +391,28 @@ const MarketplacePage: React.FC = () => {
                   trackEvent({
                     eventType: 'click_category',
                     category: nextCategory,
-                    city: city.trim() || undefined,
-                    area: area.trim() || undefined,
+                    city: selectedCity || undefined,
+                    area: selectedArea || undefined,
                   });
                 }
               }}
               options={categoryFilterOptions}
             />
-            <Input
-              value={city}
-              onChange={(event) => setCity(event.target.value)}
-              placeholder="City"
-              leftIcon={<MapPin className="h-4 w-4" />}
-            />
-            <Input
-              value={area}
-              onChange={(event) => setArea(event.target.value)}
-              placeholder="Area"
-              leftIcon={<MapPin className="h-4 w-4" />}
-            />
+            <div className="md:col-span-2">
+              <GooglePlaceLocationInput
+                value={selectedLocationLabel}
+                onSelect={(place) => {
+                  setSelectedPlace(place);
+                  setCity(place.city || '');
+                  setArea(place.area || '');
+                }}
+                onClear={() => {
+                  setSelectedPlace(null);
+                  setCity('');
+                  setArea('');
+                }}
+              />
+            </div>
             <Select
               value={String(radiusKm)}
               onChange={(event) => setRadiusKm(Number(event.target.value))}
@@ -427,8 +465,8 @@ const MarketplacePage: React.FC = () => {
                       collectionSlug: collection.slug,
                       category: collection.categories[0],
                       query: collection.keywords[0],
-                      city: city.trim() || undefined,
-                      area: area.trim() || undefined,
+                      city: selectedCity || undefined,
+                      area: selectedArea || undefined,
                       metadata: {
                         title: collection.title,
                       },
@@ -587,16 +625,16 @@ const MarketplacePage: React.FC = () => {
               {hasGoogleMapsKey() ? (
                 <GoogleVendorMap
                   businesses={businessesWithCoordinates}
-                  customerCoordinates={nearbyCoordinates}
+                  customerCoordinates={searchCoordinates}
                   className="min-h-[280px]"
                 />
               ) : (
                 <>
                   <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(168,52,61,0.08)_1px,transparent_1px),linear-gradient(0deg,rgba(184,147,79,0.09)_1px,transparent_1px)] bg-[size:42px_42px]" />
-                  {nearbyCoordinates?.length === 2 && (
+                  {searchCoordinates?.length === 2 && (
                     <div
                       className="absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-brand-900 px-3 py-1.5 text-xs font-semibold text-white shadow-lg"
-                      style={getPinStyle(nearbyCoordinates)}
+                      style={getPinStyle(searchCoordinates)}
                     >
                       <Navigation className="h-3.5 w-3.5" />
                       You

@@ -9,6 +9,7 @@ type RecommendationQuery = {
   city?: string;
   area?: string;
   pincode?: string;
+  placeId?: string;
   lat?: string;
   lng?: string;
   radiusKm?: string;
