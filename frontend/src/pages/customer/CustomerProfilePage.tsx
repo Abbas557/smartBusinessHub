@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
-import { LocateFixed, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
   useCustomerProfile,
   useUpdateCustomerProfile,
 } from '../../hooks/useCustomerProfile';
-import { searchAddresses, GeocodingResult } from '../../api/geocoding.api';
+import GoogleAddressAutocomplete from '../../components/maps/GoogleAddressAutocomplete';
+import { ParsedGoogleAddress } from '../../lib/googleMaps';
 import { Button, Card, Input, Spinner } from '../../components/ui';
 
 interface FormValues {
@@ -21,10 +21,7 @@ const CustomerProfilePage: React.FC = () => {
   const { user } = useAuth();
   const { data: profile, isLoading } = useCustomerProfile();
   const updateProfile = useUpdateCustomerProfile();
-  const [addressQuery, setAddressQuery] = useState('');
-  const [addressResults, setAddressResults] = useState<GeocodingResult[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<GeocodingResult | null>(null);
-  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<ParsedGoogleAddress | null>(null);
   const { register, handleSubmit, reset, setValue } = useForm<FormValues>();
 
   useEffect(() => {
@@ -48,22 +45,8 @@ const CustomerProfilePage: React.FC = () => {
     }
   }, [profile, reset]);
 
-  const handleAddressSearch = async () => {
-    try {
-      setIsSearchingAddress(true);
-      const results = await searchAddresses(addressQuery);
-      setAddressResults(results);
-      if (results.length === 0) toast.error('No address matches found');
-    } catch {
-      toast.error('Address search failed');
-    } finally {
-      setIsSearchingAddress(false);
-    }
-  };
-
-  const chooseAddress = (result: GeocodingResult) => {
+  const chooseAddress = (result: ParsedGoogleAddress) => {
     setSelectedLocation(result);
-    setAddressResults([]);
     setValue('city', result.city || '');
     setValue('area', result.area || '');
     setValue('pincode', result.pincode || '');
@@ -101,42 +84,11 @@ const CustomerProfilePage: React.FC = () => {
               onSubmit={handleSubmit(submitProfile)}
               className="space-y-4"
             >
-              <div className="rounded-lg border border-brand-100 bg-white p-4">
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Find your address
-                </label>
-                <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-                  <Input
-                    value={addressQuery}
-                    onChange={(event) => setAddressQuery(event.target.value)}
-                    placeholder="Search with area, city, pincode"
-                    leftIcon={<MapPin className="h-4 w-4" />}
-                  />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    isLoading={isSearchingAddress}
-                    leftIcon={<LocateFixed className="h-4 w-4" />}
-                    onClick={handleAddressSearch}
-                  >
-                    Search
-                  </Button>
-                </div>
-                {addressResults.length > 0 && (
-                    <div className="mt-3 divide-y divide-brand-100 rounded-lg border border-brand-100 bg-white">
-                    {addressResults.map((result) => (
-                      <button
-                        key={`${result.lat}-${result.lng}`}
-                        type="button"
-                        onClick={() => chooseAddress(result)}
-                        className="block w-full px-3 py-2 text-left text-sm text-brand-800/70 hover:bg-brand-50"
-                      >
-                        {result.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <GoogleAddressAutocomplete
+                label="Find your address"
+                defaultValue={selectedLocation?.label || ''}
+                onSelect={chooseAddress}
+              />
               <Input label="Phone" {...register('phone')} />
               <div className="grid gap-4 sm:grid-cols-3">
                 <Input label="City" {...register('city')} />

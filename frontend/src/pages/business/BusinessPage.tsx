@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import toast from 'react-hot-toast';
-import { Plus, Trash2, Globe, EyeOff, Clock, DollarSign, Building2, ListChecks, Code2, ImageUp, LocateFixed, MapPin } from 'lucide-react';
+import { Plus, Trash2, Globe, EyeOff, Clock, DollarSign, Building2, ListChecks, Code2, ImageUp } from 'lucide-react';
 import {
   useMyBusiness,
   useCreateBusiness,
@@ -14,7 +13,8 @@ import {
   useUpdateHours,
 } from '../../hooks/useBusiness';
 import { useAssetUpload } from '../../hooks/useUpload';
-import { searchAddresses, GeocodingResult } from '../../api/geocoding.api';
+import GoogleAddressAutocomplete from '../../components/maps/GoogleAddressAutocomplete';
+import { ParsedGoogleAddress } from '../../lib/googleMaps';
 import {
   Button, Input, Textarea, Select, Card, Badge,
   Modal, Spinner, EmptyState,
@@ -65,21 +65,7 @@ const ProfileTab: React.FC = () => {
   const updateBusiness = useUpdateBusiness();
   const publishBusiness = usePublishBusiness();
   const uploadAsset = useAssetUpload();
-  const [addressQuery, setAddressQuery] = useState('');
-  const [addressResults, setAddressResults] = useState<GeocodingResult[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<GeocodingResult | null>(
-    business?.location?.coordinates?.length === 2
-      ? {
-          label: [business.area, business.city, business.pincode].filter(Boolean).join(', '),
-          lng: business.location.coordinates[0],
-          lat: business.location.coordinates[1],
-          city: business.city,
-          area: business.area,
-          pincode: business.pincode,
-        }
-      : null,
-  );
-  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<ParsedGoogleAddress | null>(null);
 
   const isNew = !business;
 
@@ -98,6 +84,19 @@ const ProfileTab: React.FC = () => {
         galleryText: (business?.galleryUrls || []).join('\n'),
       },
     });
+
+  useEffect(() => {
+    if (business?.location?.coordinates?.length === 2) {
+      setSelectedLocation({
+        label: business.address || [business.area, business.city, business.pincode].filter(Boolean).join(', '),
+        lng: business.location.coordinates[0],
+        lat: business.location.coordinates[1],
+        city: business.city,
+        area: business.area,
+        pincode: business.pincode,
+      });
+    }
+  }, [business]);
 
   const onSubmit = async (values: ProfileFormValues) => {
     const { galleryText, ...profileValues } = values;
@@ -120,22 +119,9 @@ const ProfileTab: React.FC = () => {
     }
   };
 
-  const handleAddressSearch = async () => {
-    try {
-      setIsSearchingAddress(true);
-      const results = await searchAddresses(addressQuery);
-      setAddressResults(results);
-      if (results.length === 0) toast.error('No address matches found');
-    } catch {
-      toast.error('Address search failed');
-    } finally {
-      setIsSearchingAddress(false);
-    }
-  };
-
-  const chooseAddress = (result: GeocodingResult) => {
+  const chooseAddress = (result: ParsedGoogleAddress) => {
     setSelectedLocation(result);
-    setAddressResults([]);
+    setValue('address', result.label || '');
     setValue('city', result.city || '');
     setValue('area', result.area || '');
     setValue('pincode', result.pincode || '');
@@ -220,40 +206,12 @@ const ProfileTab: React.FC = () => {
             {...register('address')}
           />
           <div className="rounded-lg border border-brand-100 bg-brand-50 p-4">
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Map coordinates
-            </label>
-            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-              <Input
-                value={addressQuery}
-                onChange={(event) => setAddressQuery(event.target.value)}
-                placeholder="Search full business address"
-                leftIcon={<MapPin className="h-4 w-4" />}
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                isLoading={isSearchingAddress}
-                leftIcon={<LocateFixed className="h-4 w-4" />}
-                onClick={handleAddressSearch}
-              >
-                Search
-              </Button>
-            </div>
-            {addressResults.length > 0 && (
-              <div className="mt-3 divide-y divide-brand-100 rounded-lg border border-brand-100 bg-white">
-                {addressResults.map((result) => (
-                  <button
-                    key={`${result.lat}-${result.lng}`}
-                    type="button"
-                    onClick={() => chooseAddress(result)}
-                    className="block w-full px-3 py-2 text-left text-sm text-brand-800/70 hover:bg-brand-50"
-                  >
-                    {result.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            <GoogleAddressAutocomplete
+              label="Google address and map coordinates"
+              placeholder="Search full business address"
+              defaultValue={selectedLocation?.label || business?.address || ''}
+              onSelect={chooseAddress}
+            />
             {selectedLocation && (
               <p className="mt-3 text-xs text-brand-700">
                 Coordinates selected: {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}

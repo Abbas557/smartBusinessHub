@@ -27,6 +27,7 @@ import {
 import { usePublicBusinesses } from '../../hooks/useBusiness';
 import { useExploreHome, useRecommendations } from '../../hooks/useDiscovery';
 import { useCustomerEvents } from '../../hooks/useCustomerEvents';
+import GoogleVendorMap from '../../components/maps/GoogleVendorMap';
 import { useAuth } from '../../context/AuthContext';
 import {
   useCustomerProfile,
@@ -35,6 +36,7 @@ import {
 } from '../../hooks/useCustomerProfile';
 import { Business, BusinessCategory, RecommendationSection, ServiceCollection } from '../../types';
 import { Badge, Button, Card, Input, Select, Spinner } from '../../components/ui';
+import { hasGoogleMapsKey } from '../../lib/googleMaps';
 
 const categoryFilterOptions: Array<{ value: BusinessCategory | 'all'; label: string }> = [
   { value: 'all', label: 'All categories' },
@@ -582,32 +584,46 @@ const MarketplacePage: React.FC = () => {
         <Card className="overflow-hidden p-0">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="relative min-h-[280px] overflow-hidden bg-blush-100">
-              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(168,52,61,0.08)_1px,transparent_1px),linear-gradient(0deg,rgba(184,147,79,0.09)_1px,transparent_1px)] bg-[size:42px_42px]" />
-              {nearbyCoordinates?.length === 2 && (
-                <div
-                  className="absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-brand-900 px-3 py-1.5 text-xs font-semibold text-white shadow-lg"
-                  style={getPinStyle(nearbyCoordinates)}
-                >
-                  <Navigation className="h-3.5 w-3.5" />
-                  You
-                </div>
+              {hasGoogleMapsKey() ? (
+                <GoogleVendorMap
+                  businesses={businessesWithCoordinates}
+                  customerCoordinates={nearbyCoordinates}
+                  className="min-h-[280px]"
+                />
+              ) : (
+                <>
+                  <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(168,52,61,0.08)_1px,transparent_1px),linear-gradient(0deg,rgba(184,147,79,0.09)_1px,transparent_1px)] bg-[size:42px_42px]" />
+                  {nearbyCoordinates?.length === 2 && (
+                    <div
+                      className="absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-brand-900 px-3 py-1.5 text-xs font-semibold text-white shadow-lg"
+                      style={getPinStyle(nearbyCoordinates)}
+                    >
+                      <Navigation className="h-3.5 w-3.5" />
+                      You
+                    </div>
+                  )}
+                  {businessesWithCoordinates.slice(0, 16).map((business) => (
+                    <Link
+                      key={business._id}
+                      to={`/b/${business.slug}`}
+                      className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-brand-800 shadow-lg ring-1 ring-brand-200 hover:bg-brand-600 hover:text-white"
+                      style={getPinStyle(business.location!.coordinates)}
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                      {business.name}
+                    </Link>
+                  ))}
+                </>
               )}
-              {businessesWithCoordinates.slice(0, 16).map((business) => (
-                <Link
-                  key={business._id}
-                  to={`/b/${business.slug}`}
-                  className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-brand-800 shadow-lg ring-1 ring-brand-200 hover:bg-brand-600 hover:text-white"
-                  style={getPinStyle(business.location!.coordinates)}
-                >
-                  <MapPin className="h-3.5 w-3.5" />
-                  {business.name}
-                </Link>
-              ))}
             </div>
             <div className="bg-brand-900 p-5 text-white">
-              <h2 className="font-display text-2xl font-semibold">Vendor map</h2>
+              <h2 className="font-display text-2xl font-semibold">
+                {hasGoogleMapsKey() ? 'Google vendor map' : 'Vendor map'}
+              </h2>
               <p className="mt-2 text-sm leading-6 text-blush-100/75">
-                Pins use saved business coordinates. Distance labels use the marketplace location filter.
+                {hasGoogleMapsKey()
+                  ? 'Pins are powered by Google Maps using saved customer and vendor coordinates.'
+                  : 'Pins use saved business coordinates. Add a Google Maps key to enable the live map.'}
               </p>
               <div className="mt-4 space-y-2">
                 {businessesWithCoordinates.slice(0, 5).map((business) => (

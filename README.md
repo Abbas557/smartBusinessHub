@@ -162,6 +162,7 @@ Frontend variables:
 
 ```env
 VITE_API_URL=http://localhost:3001/api
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_browser_key
 ```
 
 Never commit real `.env` files. They are intentionally ignored by git.
@@ -420,7 +421,8 @@ Frontend:
 
 - Deploy the Vite app to Vercel, Netlify, Cloudflare Pages, or S3/CloudFront.
 - Set `VITE_API_URL` to the deployed backend API URL.
-- Rebuild the frontend after changing `VITE_API_URL`.
+- Set `VITE_GOOGLE_MAPS_API_KEY` to enable Google Places autocomplete, current-location picking, and the live vendor map.
+- Rebuild the frontend after changing any `VITE_*` variable.
 
 MongoDB Atlas:
 
