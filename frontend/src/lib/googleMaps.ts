@@ -52,7 +52,7 @@ export const loadGoogleMaps = () => {
     script.defer = true;
     script.src =
       `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}` +
-      '&libraries=places&callback=initSmartHubGoogleMaps';
+      '&libraries=places&loading=async&callback=initSmartHubGoogleMaps';
     script.onerror = () => reject(new Error('Google Maps failed to load'));
     document.head.appendChild(script);
   });

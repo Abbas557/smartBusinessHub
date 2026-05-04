@@ -21,6 +21,7 @@ const GoogleVendorMap: React.FC<Props> = ({
 
     let map: any;
     const markers: any[] = [];
+    let errorCheckTimer: number | undefined;
 
     loadGoogleMaps()
       .then((google) => {
@@ -79,16 +80,39 @@ const GoogleVendorMap: React.FC<Props> = ({
         });
 
         if (!bounds.isEmpty()) map.fitBounds(bounds, 56);
+
+        errorCheckTimer = window.setTimeout(() => {
+          const hasGoogleError = containerRef.current?.querySelector(
+            '.gm-err-container, .gm-err-title, .gm-err-message',
+          );
+          if (hasGoogleError) setFailed(true);
+        }, 1200);
       })
       .catch(() => setFailed(true));
 
     return () => {
+      if (errorCheckTimer) window.clearTimeout(errorCheckTimer);
       markers.forEach((marker) => marker.setMap(null));
       map = null;
     };
   }, [businesses, customerCoordinates]);
 
-  if (!hasGoogleMapsKey() || failed) return null;
+  if (!hasGoogleMapsKey() || failed) {
+    return (
+      <div className={`flex items-center justify-center bg-brand-100 p-6 ${className}`}>
+        <div className="max-w-md text-center">
+          <p className="font-display text-2xl font-semibold text-brand-900">
+            Map preview unavailable
+          </p>
+          <p className="mt-2 text-sm leading-6 text-brand-800/65">
+            Google Maps rejected the current browser key configuration. Vendor
+            coordinates are still saved, and the map will appear after the API
+            key restrictions are corrected.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
