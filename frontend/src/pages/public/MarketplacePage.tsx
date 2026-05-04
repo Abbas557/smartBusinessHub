@@ -33,7 +33,7 @@ import {
   useSaveBusiness,
   useUnsaveBusiness,
 } from '../../hooks/useCustomerProfile';
-import { BusinessCategory } from '../../types';
+import { Business, BusinessCategory, RecommendationSection, ServiceCollection } from '../../types';
 import { Badge, Button, Card, Input, Select, Spinner } from '../../components/ui';
 
 const categoryFilterOptions: Array<{ value: BusinessCategory | 'all'; label: string }> = [
@@ -65,6 +65,116 @@ const accentClasses: Record<string, string> = {
   gold: 'from-gold-500 to-[#9b6a20] text-white',
   rose: 'from-blush-300 to-brand-500 text-brand-950',
   sage: 'from-[#dbe9df] to-[#78937d] text-brand-950',
+};
+
+const fallbackCollections: ServiceCollection[] = [
+  {
+    _id: 'fallback-glow-up',
+    title: 'Glow-up appointments',
+    slug: 'glow-up-appointments',
+    subtitle: 'Highly rated salons and personal care studios.',
+    description: 'Book hair, grooming, spa, and beauty services from trusted local vendors.',
+    icon: 'sparkles',
+    categories: ['salon'],
+    keywords: ['salon', 'beauty'],
+    accent: 'rose',
+    displayOrder: 10,
+    isFeatured: true,
+    isActive: true,
+  },
+  {
+    _id: 'fallback-move-better',
+    title: 'Move better this week',
+    slug: 'move-better-this-week',
+    subtitle: 'Fitness, training, wellness, and recovery nearby.',
+    description: 'Explore gyms and wellness providers with bookable sessions.',
+    icon: 'activity',
+    categories: ['gym'],
+    keywords: ['fitness', 'gym'],
+    accent: 'gold',
+    displayOrder: 20,
+    isFeatured: true,
+    isActive: true,
+  },
+  {
+    _id: 'fallback-fix-fast',
+    title: 'Fix it fast',
+    slug: 'fix-it-fast',
+    subtitle: 'Reliable repair experts for urgent home and device work.',
+    description: 'Find repair vendors with clear prices and quick slots.',
+    icon: 'wrench',
+    categories: ['repair'],
+    keywords: ['repair', 'maintenance'],
+    accent: 'clay',
+    displayOrder: 30,
+    isFeatured: true,
+    isActive: true,
+  },
+  {
+    _id: 'fallback-care-close',
+    title: 'Care close to home',
+    slug: 'care-close-to-home',
+    subtitle: 'Clinics and health services around your area.',
+    description: 'Discover clinics and local providers for consultations and checkups.',
+    icon: 'heart-pulse',
+    categories: ['clinic'],
+    keywords: ['clinic', 'health'],
+    accent: 'sage',
+    displayOrder: 40,
+    isFeatured: true,
+    isActive: true,
+  },
+  {
+    _id: 'fallback-weekend',
+    title: 'Weekend essentials',
+    slug: 'weekend-essentials',
+    subtitle: 'Dining, self-care, and quick services for the weekend.',
+    description: 'A mixed collection of popular local vendors for easy weekend planning.',
+    icon: 'calendar-heart',
+    categories: ['restaurant', 'salon', 'gym'],
+    keywords: ['weekend', 'restaurant'],
+    accent: 'burgundy',
+    displayOrder: 50,
+    isFeatured: true,
+    isActive: true,
+  },
+];
+
+const makeFallbackRecommendationSections = (
+  businesses: Business[],
+  area?: string,
+): RecommendationSection[] => {
+  if (businesses.length === 0) return [];
+
+  const byRating = [...businesses].sort(
+    (a, b) =>
+      (b.averageRating || 0) - (a.averageRating || 0) ||
+      (b.reviewCount || 0) - (a.reviewCount || 0),
+  );
+  const byBookings = [...businesses].sort(
+    (a, b) => (b.totalBookings || 0) - (a.totalBookings || 0),
+  );
+
+  return [
+    {
+      id: 'near-you-fallback',
+      title: area ? `Recommended near ${area}` : 'Recommended near you',
+      subtitle: 'Current marketplace matches ranked from your location and filters.',
+      businesses,
+    },
+    {
+      id: 'top-rated-fallback',
+      title: 'Top rated locally',
+      subtitle: 'Available vendors ordered by review strength.',
+      businesses: byRating,
+    },
+    {
+      id: 'most-booked-fallback',
+      title: 'Most booked services',
+      subtitle: 'Popular vendors based on booking momentum.',
+      businesses: byBookings,
+    },
+  ];
 };
 
 const MarketplacePage: React.FC = () => {
@@ -146,6 +256,12 @@ const MarketplacePage: React.FC = () => {
     };
   }, [area, city, nearbyCoordinates, radiusKm]);
   const { data: recommendations } = useRecommendations(recommendationParams, isCustomer);
+  const displayCollections =
+    exploreHome?.collections?.length ? exploreHome.collections : fallbackCollections;
+  const displayRecommendationSections =
+    recommendations?.sections?.length
+      ? recommendations.sections
+      : makeFallbackRecommendationSections(businesses, area.trim() || profile?.area);
   const savedBusinessIds = new Set(profile?.savedBusinessIds || []);
   const businessesWithCoordinates = businesses.filter(
     (business) => business.location?.coordinates?.length === 2,
@@ -295,7 +411,7 @@ const MarketplacePage: React.FC = () => {
             <Compass className="hidden h-8 w-8 text-brand-800/35 sm:block" />
           </div>
           <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
-            {(exploreHome?.collections || []).slice(0, 6).map((collection) => {
+            {displayCollections.slice(0, 6).map((collection) => {
               const Icon = iconMap[collection.icon as keyof typeof iconMap] || Sparkles;
               return (
                 <button
@@ -341,16 +457,17 @@ const MarketplacePage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="relative overflow-hidden bg-brand-900 p-6 text-white">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(247,217,214,0.32),transparent_32%),radial-gradient(circle_at_78%_82%,rgba(184,147,79,0.28),transparent_28%)]" />
+        <Card className="relative overflow-hidden bg-brand-900 p-6 text-white shadow-soft">
+          <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(43,23,21,1),rgba(112,34,42,0.97)_55%,rgba(57,28,27,1)),radial-gradient(circle_at_20%_10%,rgba(247,217,214,0.2),transparent_30%)]" />
+          <div className="absolute -bottom-16 -right-12 h-48 w-48 rounded-full bg-gold-500/20 blur-3xl" />
           <div className="relative">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/12">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/15 ring-1 ring-white/20">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <h2 className="mt-5 font-display text-3xl font-semibold">
               Better matches, less scrolling.
             </h2>
-            <p className="mt-3 text-sm leading-6 text-blush-100/75">
+            <p className="mt-3 text-sm leading-6 text-blush-100">
               Recommendations now combine location, ratings, bookings, saved vendors, and category intent.
             </p>
             <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs">
@@ -359,9 +476,9 @@ const MarketplacePage: React.FC = () => {
                 ['Rated', 'Trust signal'],
                 ['Booked', 'Demand'],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-lg bg-white/10 p-3">
+                <div key={label} className="rounded-lg bg-white/12 p-3 ring-1 ring-white/15">
                   <p className="font-semibold">{label}</p>
-                  <p className="mt-1 text-white/55">{value}</p>
+                  <p className="mt-1 text-white/75">{value}</p>
                 </div>
               ))}
             </div>
@@ -369,7 +486,7 @@ const MarketplacePage: React.FC = () => {
         </Card>
       </section>
 
-      {(recommendations?.sections || []).length > 0 && (
+      {displayRecommendationSections.length > 0 && (
         <section className="space-y-5">
           <div className="flex items-end justify-between gap-4">
             <div>
@@ -380,12 +497,12 @@ const MarketplacePage: React.FC = () => {
             </div>
             <div className="hidden items-center gap-2 rounded-lg border border-brand-100 bg-white px-3 py-2 text-xs font-medium text-brand-800/55 sm:flex">
               <TrendingUp className="h-4 w-4" />
-              {recommendations?.strategy}
+              {recommendations?.strategy || 'marketplace-fallback-v1'}
             </div>
           </div>
 
           <div className="space-y-4">
-            {(recommendations?.sections || []).slice(0, 3).map((section) => (
+            {displayRecommendationSections.slice(0, 4).map((section) => (
               <Card key={section.id} className="p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
