@@ -6,22 +6,25 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { queryClient } from './store/queryClient';
 import AppRouter from './routes/AppRouter';
+import ErrorBoundary from './components/ErrorBoundary';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppRouter />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3500,
-            style: { fontSize: '14px', borderRadius: '10px' },
-          }}
-        />
-      </AuthProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AppRouter />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3500,
+              style: { fontSize: '14px', borderRadius: '10px' },
+            }}
+          />
+        </AuthProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 );

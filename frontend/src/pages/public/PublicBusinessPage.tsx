@@ -28,6 +28,34 @@ const PublicBusinessPage: React.FC = () => {
   const { data: reviews = [] } = useBusinessReviews(business?._id);
   const reportReview = useReportReview(business?._id);
   const { trackEvent } = useCustomerEvents(isCustomer);
+  const openDays = useMemo(
+    () =>
+      Object.entries(business?.hours || {}).filter(
+        ([, hours]) => hours && !hours.isClosed,
+      ),
+    [business?.hours],
+  );
+  const activeServices = useMemo(
+    () => (business?.services || []).filter((service) => service.isActive),
+    [business?.services],
+  );
+  const startingPrice = useMemo(
+    () =>
+      activeServices.length > 0
+        ? Math.min(...activeServices.map((service) => service.price))
+        : 0,
+    [activeServices],
+  );
+  const rating = business?.averageRating || 0;
+  const reviewCount = business?.reviewCount || 0;
+  const filteredReviews = useMemo(() => {
+    return reviews.filter((review) => {
+      if (reviewFilter === '5') return review.rating === 5;
+      if (reviewFilter === '4plus') return review.rating >= 4;
+      if (reviewFilter === 'reported') return Boolean(review.reportCount);
+      return true;
+    });
+  }, [reviewFilter, reviews]);
 
   useEffect(() => {
     if (!business) return;
@@ -65,22 +93,6 @@ const PublicBusinessPage: React.FC = () => {
       </div>
     );
   }
-
-  const openDays = Object.entries(business.hours || {}).filter(
-    ([, hours]) => !hours.isClosed,
-  );
-  const activeServices = business.services.filter((service) => service.isActive);
-  const startingPrice = Math.min(...activeServices.map((service) => service.price));
-  const rating = business.averageRating || 0;
-  const reviewCount = business.reviewCount || 0;
-  const filteredReviews = useMemo(() => {
-    return reviews.filter((review) => {
-      if (reviewFilter === '5') return review.rating === 5;
-      if (reviewFilter === '4plus') return review.rating >= 4;
-      if (reviewFilter === 'reported') return Boolean(review.reportCount);
-      return true;
-    });
-  }, [reviewFilter, reviews]);
 
   return (
     <div className="min-h-screen app-surface">
