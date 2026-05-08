@@ -42,10 +42,11 @@ export const usePublicBusinesses = (params: {
   lng?: number;
   radiusKm?: number;
   sort?: 'nearest' | 'top-rated' | 'most-booked';
-}) => {
+}, enabled = true) => {
   return useQuery({
     queryKey: QUERY_KEYS.business.marketplace(params),
     queryFn: () => businessApi.listPublicProfiles(params),
+    enabled,
   });
 };
 

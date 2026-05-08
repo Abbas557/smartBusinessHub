@@ -98,7 +98,16 @@ export class BusinessService {
     const filter: Record<string, any> = {};
 
     if (query.category && query.category !== 'all') {
-      filter.category = query.category;
+      const categories = query.category
+        .split(',')
+        .map((category) => category.trim())
+        .filter(Boolean);
+
+      if (categories.length > 1) {
+        filter.category = { $in: categories };
+      } else if (categories.length === 1) {
+        filter.category = categories[0];
+      }
     }
 
     if (query.city) {
@@ -121,6 +130,7 @@ export class BusinessService {
         { city: search },
         { area: search },
         { 'services.name': search },
+        { 'services.description': search },
       ];
     }
 

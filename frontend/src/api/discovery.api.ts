@@ -3,6 +3,7 @@ import {
   ApiResponse,
   Business,
   RecommendationHome,
+  ServiceCollection,
   ServiceDiscoveryHome,
 } from '../types';
 import { getCustomerSessionId } from './customerEvent.api';
@@ -22,6 +23,13 @@ const discoveryApi = {
   getExploreHome: async (): Promise<ServiceDiscoveryHome> => {
     const { data } = await axiosInstance.get<ApiResponse<ServiceDiscoveryHome>>(
       '/service-discovery',
+    );
+    return data.data;
+  },
+
+  getCollection: async (slug: string): Promise<ServiceCollection> => {
+    const { data } = await axiosInstance.get<ApiResponse<ServiceCollection>>(
+      `/service-discovery/collections/${slug}`,
     );
     return data.data;
   },

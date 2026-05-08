@@ -44,6 +44,7 @@ export const QUERY_KEYS = {
   },
   discovery: {
     home: () => ['discovery', 'home'] as const,
+    collection: (slug: string) => ['discovery', 'collection', slug] as const,
     recommendations: (
       params: Record<string, string | number | undefined>,
       isCustomer: boolean,

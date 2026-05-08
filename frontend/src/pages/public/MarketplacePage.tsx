@@ -324,6 +324,24 @@ const MarketplacePage: React.FC = () => {
       top: `${12 + ((bounds.maxLat - coordinates[1]) / latRange) * 76}%`,
     };
   };
+  const getCollectionPath = (collection: ServiceCollection) => {
+    const params = new URLSearchParams();
+
+    if (selectedCity) params.set('city', selectedCity);
+    if (selectedArea) params.set('area', selectedArea);
+    if (selectedPincode) params.set('pincode', selectedPincode);
+    if (selectedPlace?.placeId) params.set('placeId', selectedPlace.placeId);
+    if (selectedLocationLabel) params.set('locationLabel', selectedLocationLabel);
+    if (searchCoordinates?.length === 2) {
+      params.set('lng', String(searchCoordinates[0]));
+      params.set('lat', String(searchCoordinates[1]));
+      params.set('radiusKm', String(radiusKm));
+    }
+    params.set('sort', sort);
+
+    const query = params.toString();
+    return `/collections/${collection.slug}${query ? `?${query}` : ''}`;
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 lg:px-6">
@@ -454,12 +472,10 @@ const MarketplacePage: React.FC = () => {
             {displayCollections.slice(0, 6).map((collection) => {
               const Icon = iconMap[collection.icon as keyof typeof iconMap] || Sparkles;
               return (
-                <button
+                <Link
                   key={collection._id}
-                  type="button"
+                  to={getCollectionPath(collection)}
                   onClick={() => {
-                    setCategory(collection.categories[0] || 'all');
-                    setSearch(collection.keywords[0] || '');
                     trackEvent({
                       eventType: 'click_collection',
                       collectionSlug: collection.slug,
@@ -491,7 +507,7 @@ const MarketplacePage: React.FC = () => {
                       <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
                     </div>
                   </div>
-                </button>
+                </Link>
               );
             })}
           </div>

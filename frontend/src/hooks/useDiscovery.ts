@@ -9,6 +9,14 @@ export const useExploreHome = () => {
   });
 };
 
+export const useServiceCollection = (slug: string | undefined) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.discovery.collection(slug || ''),
+    queryFn: () => discoveryApi.getCollection(slug!),
+    enabled: Boolean(slug),
+  });
+};
+
 export const useRecommendations = (
   params: RecommendationParams,
   isCustomer: boolean,

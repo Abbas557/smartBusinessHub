@@ -18,6 +18,7 @@ const SettingsPage     = lazy(() => import('../pages/settings/SettingsPage'));
 const PublicBusinessPage = lazy(() => import('../pages/public/PublicBusinessPage'));
 const PublicBookingPage  = lazy(() => import('../pages/public/PublicBookingPage'));
 const MarketplacePage    = lazy(() => import('../pages/public/MarketplacePage'));
+const CollectionPage     = lazy(() => import('../pages/public/CollectionPage'));
 const CustomerBookingsPage = lazy(() => import('../pages/customer/CustomerBookingsPage'));
 const CustomerProfilePage = lazy(() => import('../pages/customer/CustomerProfilePage'));
 const AdminDashboardPage = lazy(() => import('../pages/admin/AdminDashboardPage'));
@@ -48,6 +49,7 @@ const AppRouter: React.FC = () => (
         {/* Public customer-facing routes */}
         <Route element={<CustomerShell />}>
           <Route path="/marketplace" element={<MarketplacePage />} />
+          <Route path="/collections/:slug" element={<CollectionPage />} />
         </Route>
         <Route path="/b/:slug"      element={<PublicBusinessPage />} />
         <Route path="/b/:slug/book" element={<PublicBookingPage />} />
