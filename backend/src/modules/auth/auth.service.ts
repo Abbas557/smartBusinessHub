@@ -150,6 +150,12 @@ export class AuthService {
     }
 
     // 3. Verify password
+    if (!user.password) {
+      throw new UnauthorizedException(
+        'This account does not have a password login. Please sign in with Google or create a password first.',
+      );
+    }
+
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) {
       throw new UnauthorizedException('Invalid email or password');
