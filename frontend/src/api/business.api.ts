@@ -1,3 +1,4 @@
+import axios from 'axios';
 import axiosInstance from './axios';
 import { ApiResponse, Business, Service } from '../types';
 
@@ -49,9 +50,17 @@ const businessApi = {
     return data.data;
   },
 
-  getMyBusiness: async (): Promise<Business> => {
-    const { data } = await axiosInstance.get<ApiResponse<Business>>('/business/me');
-    return data.data;
+  getMyBusiness: async (): Promise<Business | null> => {
+    try {
+      const { data } = await axiosInstance.get<ApiResponse<Business>>('/business/me');
+      return data.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return null;
+      }
+
+      throw error;
+    }
   },
 
   update: async (payload: UpdateBusinessPayload): Promise<Business> => {
